@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="point_palette">
+        <attr name="outer" format="color" />
+        <attr name="inner" format="color" />
+    </declare-styleable>
+
+    <style name="inactive" parent="AppTheme">
+        <item name="outer">#000</item>
+        <item name="inner">#fff</item>
+    </style>
+
+    <style name="active" parent="AppTheme">
+        <item name="outer">#000</item>
+        <item name="inner">#00ff00</item>
+    </style>
+
+
+
+    <declare-styleable name="on_of_palette">
+        <attr name="on_off" format="color" />
+    </declare-styleable>
+
+    <style name="on" parent="AppTheme">
+        <item name="on_off">#409e3d</item>
+    </style>
+
+    <style name="off" parent="AppTheme">
+        <item name="on_off">#b82e2e</item>
+    </style>
+
+</resources>

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Auto Clicker</string>
+    <string name="delay">Delay</string>
+    <string name="random">Random radius</string>
 </resources>

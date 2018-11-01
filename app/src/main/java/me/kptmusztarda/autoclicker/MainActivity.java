@@ -5,24 +5,36 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Switch;
 
-import me.kptmusztarda.handylib.Logger;
-
 public class MainActivity extends Activity {
+
+    private static final String TAG = "MainActivity";
+    private Switch main;
+    private boolean resuming;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Logger.log("","");
 
-        Switch switchh = findViewById(R.id.switchh);
-        switchh.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if(isChecked) {
-                sendBroadcast(new Intent(Accessibility.ACTION_ADD_VIEW));
-            } else {
-                sendBroadcast(new Intent(Accessibility.ACTION_REMOVE_VIEW));
+        main = findViewById(R.id.switchh);
+        main.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(!resuming) {
+                if (isChecked) {
+                    sendBroadcast(new Intent(Accessibility.ACTION_SHOW));
+                } else {
+                    sendBroadcast(new Intent(Accessibility.ACTION_HIDE));
+                }
             }
         });
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        resuming = true;
+        main.setChecked(Accessibility.isOpened());
+        resuming = false;
     }
 }
