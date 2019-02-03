@@ -14,10 +14,16 @@ public class BezierPointView extends View {
     }
 
     protected WindowManager.LayoutParams getParams() {
+
+        int type;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+        } else type = WindowManager.LayoutParams.TYPE_PHONE;
+
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
 

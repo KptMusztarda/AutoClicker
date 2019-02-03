@@ -6,8 +6,8 @@ android {
         applicationId "me.kptmusztarda.autoclicker"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode 11
+        versionName "1.1"
     }
     buildTypes {
         release {
@@ -24,6 +24,5 @@ android {
 dependencies {
     implementation fileTree(include: ['*.aar'], dir: 'libs')
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-//    compile 'com.github.devsideal:VectorChildFinder:1.0.0'
-
+    implementation 'com.android.support:appcompat-v7:28.0.0'
 }

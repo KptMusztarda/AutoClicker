@@ -24,7 +24,7 @@ public class MyWindowManager {
         } catch (Exception e) {
 //            e.printStackTrace();
             if(!(e instanceof IllegalStateException)) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
     }

@@ -9,6 +9,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.os.Handler;
+import android.provider.Telephony;
+import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,6 +19,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageButton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -49,6 +53,8 @@ public class Accessibility extends AccessibilityService {
     private int activePointIndex = 0;
     private long volumeDownPressTime;
 
+    private boolean savedState[] = new boolean[2];
+
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -70,6 +76,37 @@ public class Accessibility extends AccessibilityService {
                 case Intent.ACTION_SCREEN_OFF:
 
                     breakLoop();
+                    dim(false);
+
+                    break;
+                case TelephonyManager.ACTION_PHONE_STATE_CHANGED:
+
+                    Logger.log(TAG, "Extra State: " + intent.getStringExtra(TelephonyManager.EXTRA_STATE));
+
+                    TelephonyManager  telephonyManager = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+                    switch (telephonyManager.getCallState()) {
+                        case TelephonyManager.CALL_STATE_RINGING:
+                            savedState[0] = active;
+                            savedState[1] = dimmed;
+                            breakLoop();
+                            dim(false);
+
+                            break;
+                        case TelephonyManager.CALL_STATE_OFFHOOK:
+
+                            savedState[0] = false;
+                            savedState[1] = false;
+
+                            break;
+                        case TelephonyManager.CALL_STATE_IDLE:
+                            if(savedState[0])
+                                new Handler().postDelayed(() -> {
+                                    loop();
+                                    dim(savedState[1]);
+                                }, 2000);
+
+                            break;
+                    }
 
                     break;
             }
@@ -89,6 +126,7 @@ public class Accessibility extends AccessibilityService {
         filter.addAction(ACTION_HIDE);
         filter.addAction(ACTION_SHOW);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
         registerReceiver(receiver, filter);
         Logger.log(TAG, "BroadcastReceiver registered");
 
@@ -230,7 +268,7 @@ public class Accessibility extends AccessibilityService {
                         int x = (int) (arr[0] + r * Math.cos(a));
                         int y = (int) (arr[1] + r * Math.sin(a));
 
-                        Logger.log(TAG, "Point " + i);
+                        //Logger.log(TAG, "Point " + i);
 //                        Logger.log(TAG, "coords=" + arr[0] + "," + arr[1]);
 //                        Logger.log(TAG, "Random coords=" + x + "," + y);
 
@@ -240,7 +278,8 @@ public class Accessibility extends AccessibilityService {
                         GestureDescription gesture = builder.build();
                         if (!active) break;
 
-                        Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
+                        dispatchGesture(gesture, null, null);
+                        //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
 
                         try {
                             TimeUnit.MILLISECONDS.sleep(delay + duration);
