@@ -8,9 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.media.AudioManager;
+import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
-import android.provider.Telephony;
+import android.support.annotation.Nullable;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -18,8 +23,9 @@ import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageButton;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -40,7 +46,7 @@ public class Accessibility extends AccessibilityService {
     private GestureDescription gesture;
     private SharedPreferences pref;
     private SharedPreferences.Editor prefEditor;
-    private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, increaseRadiusButton, decreaseRadiusButton;
+    private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, increaseRadiusButton, decreaseRadiusButton, debug;
     private View divider;
     private Timer timer;
 
@@ -241,6 +247,46 @@ public class Accessibility extends AccessibilityService {
             }
         });
         decreaseRadiusButton.setVisibility(View.GONE);
+
+        debug = settingsLayout.findViewById(R.id.debug);
+        debug.setOnTouchListener((v, event) -> {
+            if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                performGlobalAction(GLOBAL_ACTION_TAKE_SCREENSHOT);
+            }
+            return false;
+        });
+
+        String screenshotsDirectory = Environment.getExternalStorageDirectory().getPath() + "/DCIM/Screenshots";
+
+        FileObserver fileObserver = new FileObserver(screenshotsDirectory) {
+            @Override
+            public void onEvent(int event, @Nullable String path) {
+                if(event == CREATE) {
+                    Logger.log(TAG, "New screenshot \"" + screenshotsDirectory + "/" + path + "\"");
+                    File imgFile = new  File(screenshotsDirectory + "/" + path);
+                    Logger.log(TAG, "Full path \"" + imgFile.getPath() + "\"");
+
+                    ImageDecoder.Source source = ImageDecoder.createSource(imgFile);
+
+                    Bitmap bitmap = null;
+                    try {
+                        bitmap = ImageDecoder.decodeBitmap(source);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    int pixel = bitmap.getPixel(1250, 400);
+                    boolean match = true;
+                    if(Color.red(pixel) != 245) match = false;
+                    if(Color.green(pixel) != 232) match = false;
+                    if(Color.blue(pixel) != 216) match = false;
+                    if(match) {
+                        Logger.log(TAG, "Event is there!");
+                    }
+                }
+            }
+        };
+        fileObserver.startWatching();
     }
 
     private void loop() {

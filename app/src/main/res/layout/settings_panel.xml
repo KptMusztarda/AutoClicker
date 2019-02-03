@@ -70,7 +70,7 @@
         android:src="@drawable/ic_point_remove"
         app:layout_constraintBottom_toTopOf="@+id/dimButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addButton" />
 
@@ -153,9 +153,27 @@
         android:background="@android:color/transparent"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_radius_decrease"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/debug"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/increaseRadiusButton" />
+
+    <ImageButton
+        android:id="@+id/debug"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:adjustViewBounds="true"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/decreaseRadiusButtonimageButton2"
+        android:src="@mipmap/ic_launcher" />
+
 </android.support.constraint.ConstraintLayout>
