@@ -6,8 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import me.kptmusztarda.handylib.Logger;
+
 public class MyWindowManager {
 
+    private final static String TAG = "MyWindowManager";
     private WindowManager windowManager;
 
     MyWindowManager(Context context) {
@@ -21,6 +24,7 @@ public class MyWindowManager {
     void removeViewImmediate(View view) {
         try {
             windowManager.removeViewImmediate(view);
+            Logger.log(TAG, "Removing view");
         } catch (Exception e) {
 //            e.printStackTrace();
             if(!(e instanceof IllegalStateException)) {
@@ -32,6 +36,7 @@ public class MyWindowManager {
     void addView(View view, ViewGroup.LayoutParams params) {
         try {
             windowManager.addView(view, params);
+            Logger.log(TAG, "Adding vied");
         } catch (Exception e) {
 //            e.printStackTrace();
             if(!(e instanceof IllegalStateException)) {

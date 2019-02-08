@@ -32,17 +32,21 @@ public class Accessibility extends AccessibilityService {
     private static final String TAG = "Accessibility";
     public static final String ACTION_SHOW = "me.kptmusztarda.autoclicker.ACTION_SHOW";
     public static final String ACTION_HIDE = "me.kptmusztarda.autoclicker.ACTION_HIDE";
+    public static final String ACTION_LOAD = "me.kptmusztarda.autoclicker.ACTION_LOAD";
+    public static final String EXTRA_PROFILE_ID = "me.kptmusztarda.autoclicker.EXTRA_PROFILE_ID";
 
     private MyWindowManager windowManager;
     private SettingsLayout settingsLayout;
     private BackgroundView backgroundView;
     private DimView dimView;
     private GestureDescription gesture;
-    private SharedPreferences pref;
-    private SharedPreferences.Editor prefEditor;
     private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, increaseRadiusButton, decreaseRadiusButton;
     private View divider;
     private Timer timer;
+    private ViewsManager viewsManager;
+    private ProfileManager profileManager;
+
+    private Profile profile;
 
 //    private List<BezierPointView> bezierPoints;
     private boolean active = false;
@@ -62,15 +66,22 @@ public class Accessibility extends AccessibilityService {
             Logger.log(TAG, "Received: " + intent.getAction());
 
             switch (intent.getAction()) {
-                case ACTION_SHOW:
-
-                    show();
-
-                    break;
+//                case ACTION_SHOW:
+//
+//                    show();
+//
+//                    break;
                 case ACTION_HIDE:
 
                     breakLoop();
                     close();
+
+                    break;
+                case ACTION_LOAD:
+
+                    show();
+                    int profileID = intent.getIntExtra(EXTRA_PROFILE_ID, 0);
+                    loadProfile(profileID);
 
                     break;
                 case Intent.ACTION_SCREEN_OFF:
@@ -82,37 +93,39 @@ public class Accessibility extends AccessibilityService {
                 case TelephonyManager.ACTION_PHONE_STATE_CHANGED:
 
                     Logger.log(TAG, "Extra State: " + intent.getStringExtra(TelephonyManager.EXTRA_STATE));
-
-                    TelephonyManager  telephonyManager = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-                    switch (telephonyManager.getCallState()) {
-                        case TelephonyManager.CALL_STATE_RINGING:
-                            savedState[0] = active;
-                            savedState[1] = dimmed;
-                            breakLoop();
-                            dim(false);
-
-                            break;
-                        case TelephonyManager.CALL_STATE_OFFHOOK:
-
-                            savedState[0] = false;
-                            savedState[1] = false;
-
-                            break;
-                        case TelephonyManager.CALL_STATE_IDLE:
-                            if(savedState[0])
-                                new Handler().postDelayed(() -> {
-                                    loop();
-                                    dim(savedState[1]);
-                                }, 2000);
-
-                            break;
-                    }
-
+                    onPhoneStateChanged(context);
                     break;
             }
         }
     };
 
+    private void onPhoneStateChanged(Context context) {
+
+        TelephonyManager  telephonyManager = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+        switch (telephonyManager.getCallState()) {
+            case TelephonyManager.CALL_STATE_RINGING:
+                savedState[0] = active;
+                savedState[1] = dimmed;
+                breakLoop();
+                dim(false);
+
+                break;
+            case TelephonyManager.CALL_STATE_OFFHOOK:
+
+                savedState[0] = false;
+                savedState[1] = false;
+
+                break;
+            case TelephonyManager.CALL_STATE_IDLE:
+                if(savedState[0])
+                    new Handler().postDelayed(() -> {
+                        loop();
+                        dim(savedState[1]);
+                    }, 2000);
+
+                break;
+        }
+    }
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -122,21 +135,20 @@ public class Accessibility extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
+        Logger.log(TAG, "onCreate");
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_HIDE);
-        filter.addAction(ACTION_SHOW);
+//        filter.addAction(ACTION_SHOW);
+        filter.addAction(ACTION_LOAD);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
         registerReceiver(receiver, filter);
         Logger.log(TAG, "BroadcastReceiver registered");
 
-        pref = getSharedPreferences(getPackageName() + ".prefs", MODE_PRIVATE);
-        prefEditor = pref.edit();
-
+        viewsManager = ViewsManager.getInstance();
         setupViews();
-
-
-        createPointsFromString(pref.getString("profile_1", ""));
+        profileManager = new ProfileManager(this);
+        profileManager.loadProfiles();
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -144,6 +156,8 @@ public class Accessibility extends AccessibilityService {
         windowManager = new MyWindowManager(getApplicationContext());
 
         backgroundView = new BackgroundView(this);
+        viewsManager.setBackgroundView(backgroundView);
+
         settingsLayout = new SettingsLayout(this);
         dimView = new DimView(this);
 
@@ -180,20 +194,13 @@ public class Accessibility extends AccessibilityService {
         addButton.setOnClickListener(v -> {
             int coords[] = new int[2];
             v.getLocationOnScreen(coords);
-            createNewPoint(coords[0] + v.getWidth() + 100, coords[1], 0, true);
+            profile.addPoint(coords[0] + v.getWidth() + 100, coords[1], 0, true);
         });
         addButton.setVisibility(View.GONE);
 
         removeButton = settingsLayout.findViewById(R.id.removeButton);
         removeButton.setOnClickListener(v -> {
-            if(points.size() > 0) {
-                int last = points.size()-1;
-                windowManager.removeViewImmediate(points.get(last));
-                if(last > 0) select(points.get(last-1));
-                points.remove(last);
-                backgroundView.removeLastPoint();
-                backgroundView.invalidate();
-            }
+            profile.removePoint(profile.getSelectedPointIndex());
         });
         removeButton.setVisibility(View.GONE);
 
@@ -220,27 +227,27 @@ public class Accessibility extends AccessibilityService {
         divider = settingsLayout.findViewById(R.id.divider);
         divider.setVisibility(View.GONE);
 
-        increaseRadiusButton = settingsLayout.findViewById(R.id.increaseRadiusButton);
-        increaseRadiusButton.setOnClickListener(v -> {
-            if(points.size() > 0) {
-                PointView p = points.get(activePointIndex);
-                p.setRandomRadius(p.getRandomRadius() + 10);
-                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
-                backgroundView.invalidate();
-            }
-        });
-        increaseRadiusButton.setVisibility(View.GONE);
-
-        decreaseRadiusButton = settingsLayout.findViewById(R.id.decreaseRadiusButtonimageButton2);
-        decreaseRadiusButton.setOnClickListener(v -> {
-            if(points.size() > 0) {
-                PointView p = points.get(activePointIndex);
-                p.setRandomRadius(p.getRandomRadius() - 10);
-                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
-                backgroundView.invalidate();
-            }
-        });
-        decreaseRadiusButton.setVisibility(View.GONE);
+//        increaseRadiusButton = settingsLayout.findViewById(R.id.increaseRadiusButton);
+//        increaseRadiusButton.setOnClickListener(v -> {
+//            if(points.size() > 0) {
+//                PointView p = points.get(activePointIndex);
+//                p.setRandomRadius(p.getRandomRadius() + 10);
+//                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
+//                backgroundView.invalidate();
+//            }
+//        });
+//        increaseRadiusButton.setVisibility(View.GONE);
+//
+//        decreaseRadiusButton = settingsLayout.findViewById(R.id.decreaseRadiusButtonimageButton2);
+//        decreaseRadiusButton.setOnClickListener(v -> {
+//            if(points.size() > 0) {
+//                PointView p = points.get(activePointIndex);
+//                p.setRandomRadius(p.getRandomRadius() - 10);
+//                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
+//                backgroundView.invalidate();
+//            }
+//        });
+//        decreaseRadiusButton.setVisibility(View.GONE);
     }
 
     private void loop() {
@@ -256,11 +263,11 @@ public class Accessibility extends AccessibilityService {
 
 
                 while(active) {
-                    for (int i = 0; i < points.size(); i++) {
+                    for (int i = 0; i < profile.getPoints().size(); i++) {
                         GestureDescription.Builder builder = new GestureDescription.Builder();
                         CustomPath path = new CustomPath();
 
-                        PointView p = points.get(i);
+                        PointView p = profile.getPoints().get(i);
 
                         int[] arr = p.getPointCoordinates();
                         double a = Math.random() * 2 * Math.PI;
@@ -299,6 +306,19 @@ public class Accessibility extends AccessibilityService {
         Logger.log(TAG, "Loop thread started");
     }
 
+    private void loadProfile(int profileID) {
+
+        profile = profileManager.getProfile(profileID);
+
+        Logger.log(TAG, "Loading profile " + profileID + " named \"" + profile.getName() + "\"");
+
+        List<PointView> gestures = profile.getPoints();
+//        for(PointView gesture : gestures) {
+//            gesture.show();
+//        }
+
+    }
+
     @Override
     public boolean onKeyEvent(KeyEvent event) {
 //        Logger.log(TAG, "Keycode " + event.getKeyCode());
@@ -330,93 +350,56 @@ public class Accessibility extends AccessibilityService {
 //        timer.purge();
     }
 
-    private GestureDescription getGesture() {
-
-        GestureDescription.Builder builder = new GestureDescription.Builder();
-        CustomPath path = new CustomPath();
-        if(points.size() > 0) {
-            int[] coords = points.get(0).getPointCoordinates();
-            path.moveTo(coords[0], coords[1]);
-        }
-        for(int i=1; i<points.size(); i++) {
-            int[] coords = points.get(i).getPointCoordinates();
-            path.lineTo(coords[0], coords[1]);
-        }
-        builder.addStroke(new GestureDescription.StrokeDescription(path, 0,points.size() * 500));
-        GestureDescription gesture = builder.build();
-
-        return gesture;
-    }
+//    private GestureDescription getGesture() {
+//
+//        GestureDescription.Builder builder = new GestureDescription.Builder();
+//        CustomPath path = new CustomPath();
+//        if(points.size() > 0) {
+//            int[] coords = points.get(0).getPointCoordinates();
+//            path.moveTo(coords[0], coords[1]);
+//        }
+//        for(int i=1; i<points.size(); i++) {
+//            int[] coords = points.get(i).getPointCoordinates();
+//            path.lineTo(coords[0], coords[1]);
+//        }
+//        builder.addStroke(new GestureDescription.StrokeDescription(path, 0,points.size() * 500));
+//        GestureDescription gesture = builder.build();
+//
+//        return gesture;
+//    }
 
     private void enableEditMode(boolean b) {
+
         if(b) {
             windowManager.addView(backgroundView, backgroundView.getParams());
-            for(PointView view : points) {
-                windowManager.addView(view, view.getParams());
+            for(PointView view : profile.getPoints()) {
+                view.show();
             }
             addButton.setVisibility(View.VISIBLE);
             removeButton.setVisibility(View.VISIBLE);
             divider.setVisibility(View.VISIBLE);
-            increaseRadiusButton.setVisibility(View.VISIBLE);
-            decreaseRadiusButton.setVisibility(View.VISIBLE);
+//            increaseRadiusButton.setVisibility(View.VISIBLE);
+//            decreaseRadiusButton.setVisibility(View.VISIBLE);
         } else {
-//            if(points.size() > 0) gesture = getGesture();
-            prefEditor.putString("profile_1", pointsToString());
-            prefEditor.apply();
 
-            for(int i=points.size()-1; i>=0; i--) {
-                windowManager.removeViewImmediate(points.get(i));
+            profileManager.saveProfiles();
+
+            for(int i=profile.getPoints().size()-1; i>=0; i--) {
+                profile.getPoints().get(i).hide();
             }
             windowManager.removeViewImmediate(backgroundView);
 
             addButton.setVisibility(View.GONE);
             removeButton.setVisibility(View.GONE);
-            divider.setVisibility(View.GONE);
-            increaseRadiusButton.setVisibility(View.GONE);
-            decreaseRadiusButton.setVisibility(View.GONE);
+//            divider.setVisibility(View.GONE);
+//            increaseRadiusButton.setVisibility(View.GONE);
+//            decreaseRadiusButton.setVisibility(View.GONE);
         }
         editMode = b;
 
 //        windowManager.updateViewLayout(settingsLayout, settingsLayout.getParams());
     }
 
-    private String pointsToString() {
-        StringBuilder builder = new StringBuilder();
-        for(PointView point : points) {
-            int[] coords = point.getRawCoordinates();
-            builder.append(coords[0]);
-            builder.append(",");
-            builder.append(coords[1]);
-            builder.append(",");
-            builder.append(point.getRandomRadius());
-            builder.append(';');
-        }
-        Logger.log(TAG, builder.toString());
-        return builder.toString();
-    }
-
-    private void createPointsFromString(String s) {
-        Logger.log(TAG, "Saved string=\"" + s + "\"");
-        if(!s.isEmpty()) {
-            do {
-                int ind;
-                int x = Integer.parseInt(s.substring(0, ind = s.indexOf(',')));
-                int y = Integer.parseInt(s.substring(ind + 1, ind = s.indexOf(',', ind + 1)));
-                int r = Integer.parseInt(s.substring(ind + 1, ind = s.indexOf(';')));
-
-                createNewPoint(x, y, r, false);
-
-                s = s.substring(ind + 1);
-
-            } while(s.length() > 0);
-        }
-    }
-
-    private void select(PointView p) {
-        if(points.size() > 0) points.get(activePointIndex).setColorToActive(false);
-        activePointIndex = points.indexOf(p);
-        p.setColorToActive(true);
-    }
 
     private void dim() {
         if(dimmed) {
@@ -437,71 +420,6 @@ public class Accessibility extends AccessibilityService {
             dimmed = false;
         }
     }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private void createNewPoint(int x, int y, int r, boolean show) {
-        PointView pointView = new PointView(this, points.size() + 1, x, y);
-        Logger.log(TAG, "Creating point with raw cooirdinates=" + x + ","  + y);
-        pointView.setRandomRadius(r);
-        pointView.setOnTouchListener(new View.OnTouchListener() {
-            private int lastAction;
-            private int initialX;
-            private int initialY;
-            private int offsetX;
-            private int offsetY;
-            private float initialTouchX;
-            private float initialTouchY;
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-
-                    case MotionEvent.ACTION_DOWN:
-
-                        select(pointView);
-
-                        int[] coords = pointView.getRawCoordinates();
-                        offsetX = (int) event.getRawX() - coords[0];
-                        offsetY = (int) event.getRawY() - coords[1];
-//                            Logger.log(TAG, "Action down; Offset=" + offsetX + " " + offsetY);
-
-//                            initialX = coords[0];
-//                            initialY = coords[1];
-//
-//                            initialTouchX = event.getRawX();
-//                            initialTouchY = event.getRawY();
-
-//                            lastAction = event.getAction();
-                        break;
-//
-//                        case MotionEvent.ACTION_UP:
-//                            lastAction = event.getAction();
-//                            return true;
-
-                    case MotionEvent.ACTION_MOVE:
-                        pointView.setRawCoordinates((int) event.getRawX() - offsetX, (int) event.getRawY() - offsetY);
-//                            Logger.log(TAG, "Action move; New position=" + ((int) event.getRawX() - offsetX) + " " + ((int) event.getRawY() - offsetY));
-                        windowManager.updateViewLayout(pointView, pointView.getParams());
-                        backgroundView.updatePoint(points.indexOf(pointView), pointView.getPointCoordinates(), pointView.getRandomRadius());
-                        backgroundView.invalidate();
-                        break;
-
-                }
-
-                return false;
-            }
-        });
-        points.add(pointView);
-        select(pointView);
-        int arr[] = pointView.getPointCoordinates();
-        Logger.log(TAG, "Adding to background view with coords=" + arr[0] + "," + arr[1]);
-        backgroundView.addPoint(arr, pointView.getRandomRadius());
-        if(show) {
-            windowManager.addView(pointView, pointView.getParams());
-            backgroundView.invalidate();
-        }
-    }
-
     private void close() {
         if(editMode) enableEditMode(false);
         breakLoop();
