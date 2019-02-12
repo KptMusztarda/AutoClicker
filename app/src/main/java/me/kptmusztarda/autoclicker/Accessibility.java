@@ -7,10 +7,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Handler;
-import android.provider.Telephony;
 import android.telephony.TelephonyManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -19,7 +17,6 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageButton;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -46,6 +43,8 @@ public class Accessibility extends AccessibilityService {
     private ViewsManager viewsManager;
     private ProfileManager profileManager;
 
+    private GestureDispatcher gestureDispatcher;
+
     private Profile profile;
 
 //    private List<BezierPointView> bezierPoints;
@@ -53,7 +52,7 @@ public class Accessibility extends AccessibilityService {
     private boolean editMode = false;
     private boolean dimmed = false;
     private static  boolean isOpened = false;
-    private List<PointView> points = new ArrayList<>();
+    private List<RandomCircle> points = new ArrayList<>();
     private int activePointIndex = 0;
     private long volumeDownPressTime;
 
@@ -73,7 +72,7 @@ public class Accessibility extends AccessibilityService {
 //                    break;
                 case ACTION_HIDE:
 
-                    breakLoop();
+                    gestureDispatcher.stop();
                     close();
 
                     break;
@@ -86,7 +85,7 @@ public class Accessibility extends AccessibilityService {
                     break;
                 case Intent.ACTION_SCREEN_OFF:
 
-                    breakLoop();
+                    gestureDispatcher.stop();
                     dim(false);
 
                     break;
@@ -106,7 +105,7 @@ public class Accessibility extends AccessibilityService {
             case TelephonyManager.CALL_STATE_RINGING:
                 savedState[0] = active;
                 savedState[1] = dimmed;
-                breakLoop();
+                gestureDispatcher.stop();
                 dim(false);
 
                 break;
@@ -119,7 +118,7 @@ public class Accessibility extends AccessibilityService {
             case TelephonyManager.CALL_STATE_IDLE:
                 if(savedState[0])
                     new Handler().postDelayed(() -> {
-                        loop();
+                        gestureDispatcher.start();
                         dim(savedState[1]);
                     }, 2000);
 
@@ -131,6 +130,8 @@ public class Accessibility extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
     }
+
+
 
     @Override
     public void onCreate() {
@@ -149,6 +150,23 @@ public class Accessibility extends AccessibilityService {
         setupViews();
         profileManager = new ProfileManager(this);
         profileManager.loadProfiles();
+
+        gestureDispatcher = new GestureDispatcher() {
+            @Override
+            void dispatch(GestureDescription gesture) {
+                dispatchGesture(gesture, null, null);
+            }
+
+            @Override
+            void onStart() {
+                settingsLayout.setMainSwitchColorToActive(true);
+            }
+
+            @Override
+            void onStop() {
+                settingsLayout.setMainSwitchColorToActive(false);
+            }
+        };
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -166,10 +184,10 @@ public class Accessibility extends AccessibilityService {
             switch(event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     Logger.log(TAG, "Button clicked");
-                    if(!active) {
+                    if(!gestureDispatcher.isActive()) {
                         if(editMode) enableEditMode(false);
-                        loop();
-                    } else breakLoop();
+                        gestureDispatcher.start();
+                    } else gestureDispatcher.stop();
                     break;
             }
             return false;
@@ -181,8 +199,8 @@ public class Accessibility extends AccessibilityService {
             switch(event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     if(editMode) enableEditMode(false);
-                    else if(active) {
-                        breakLoop();
+                    else if(gestureDispatcher.isActive()) {
+                        gestureDispatcher.stop();
                         enableEditMode(true);
                     } else enableEditMode(true);
                     break;
@@ -250,69 +268,13 @@ public class Accessibility extends AccessibilityService {
 //        decreaseRadiusButton.setVisibility(View.GONE);
     }
 
-    private void loop() {
-
-        Logger.log(TAG, "Activated");
-        active = true;
-        settingsLayout.setMainSwitchColorToActive(true);
-
-        new Thread(() -> {
-
-            int duration = 10;
-            int delay = 20;
-
-
-                while(active) {
-                    for (int i = 0; i < profile.getPoints().size(); i++) {
-                        GestureDescription.Builder builder = new GestureDescription.Builder();
-                        CustomPath path = new CustomPath();
-
-                        PointView p = profile.getPoints().get(i);
-
-                        int[] arr = p.getPointCoordinates();
-                        double a = Math.random() * 2 * Math.PI;
-                        double r = p.getRandomRadius() * Math.sqrt(Math.random());
-                        int x = (int) (arr[0] + r * Math.cos(a));
-                        int y = (int) (arr[1] + r * Math.sin(a));
-
-                        //Logger.log(TAG, "Point " + i);
-//                        Logger.log(TAG, "coords=" + arr[0] + "," + arr[1]);
-//                        Logger.log(TAG, "Random coords=" + x + "," + y);
-
-                        path.moveTo(x, y);
-
-                        builder.addStroke(new GestureDescription.StrokeDescription(path, 0, duration));
-                        GestureDescription gesture = builder.build();
-                        if (!active) break;
-
-                        dispatchGesture(gesture, null, null);
-                        //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
-
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(delay + duration);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-//                    try {
-//                        TimeUnit.MILLISECONDS.sleep(delay);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-                }
-            Logger.log(TAG, "Loop thread ended");
-        }).start();
-
-        Logger.log(TAG, "Loop thread started");
-    }
-
     private void loadProfile(int profileID) {
 
         profile = profileManager.getProfile(profileID);
 
         Logger.log(TAG, "Loading profile " + profileID + " named \"" + profile.getName() + "\"");
 
-        List<PointView> gestures = profile.getPoints();
+        gestureDispatcher.setProfile(profile);
 //        for(PointView gesture : gestures) {
 //            gesture.show();
 //        }
@@ -342,37 +304,11 @@ public class Accessibility extends AccessibilityService {
         } else return super.onKeyEvent(event);
     }
 
-    private void breakLoop() {
-        Logger.log(TAG, "Deactivated");
-        active = false;
-        settingsLayout.setMainSwitchColorToActive(false);
-//        timer.cancel();
-//        timer.purge();
-    }
-
-//    private GestureDescription getGesture() {
-//
-//        GestureDescription.Builder builder = new GestureDescription.Builder();
-//        CustomPath path = new CustomPath();
-//        if(points.size() > 0) {
-//            int[] coords = points.get(0).getPointCoordinates();
-//            path.moveTo(coords[0], coords[1]);
-//        }
-//        for(int i=1; i<points.size(); i++) {
-//            int[] coords = points.get(i).getPointCoordinates();
-//            path.lineTo(coords[0], coords[1]);
-//        }
-//        builder.addStroke(new GestureDescription.StrokeDescription(path, 0,points.size() * 500));
-//        GestureDescription gesture = builder.build();
-//
-//        return gesture;
-//    }
-
     private void enableEditMode(boolean b) {
 
         if(b) {
             windowManager.addView(backgroundView, backgroundView.getParams());
-            for(PointView view : profile.getPoints()) {
+            for(RandomCircle view : profile.getPoints()) {
                 view.show();
             }
             addButton.setVisibility(View.VISIBLE);
@@ -422,7 +358,7 @@ public class Accessibility extends AccessibilityService {
     }
     private void close() {
         if(editMode) enableEditMode(false);
-        breakLoop();
+        gestureDispatcher.stop();
         dim(false);
         windowManager.removeViewImmediate(settingsLayout);
         isOpened = false;

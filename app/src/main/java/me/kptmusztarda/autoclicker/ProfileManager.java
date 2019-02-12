@@ -85,8 +85,8 @@ class ProfileManager {
             prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, profile.getName());
 
             StringBuilder builder = new StringBuilder();
-            for (PointView point : profile.getPoints()) {
-                int[] coords = point.getRawCoordinates();
+            for (RandomCircle point : profile.getPoints()) {
+                int[] coords = point.getViewCoordinates();
                 builder.append(coords[0]);
                 builder.append(",");
                 builder.append(coords[1]);

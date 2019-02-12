@@ -5,6 +5,7 @@ import android.view.MotionEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import me.kptmusztarda.handylib.Logger;
 
@@ -14,7 +15,7 @@ public class Profile {
 
     private Context context;
     private String name;
-    private List<PointView> points = new ArrayList<>();
+    private List<RandomCircle> points = new ArrayList<>();
     private ViewsManager viewsManager = ViewsManager.getInstance();
     private MyWindowManager windowManager;
     private int selectedPoint;
@@ -26,7 +27,7 @@ public class Profile {
     }
 
     void addPoint(int x, int y, int r, boolean show) {
-        PointView pointView = new PointView(context, points.size(), x, y) {
+        RandomCircle pointView = new RandomCircle(context, points.size(), x, y) {
             @Override
             public boolean onTouchEvent(MotionEvent event) {
                 selectPoint(getIndex());
@@ -49,8 +50,14 @@ public class Profile {
     }
 
     void removePoint(int index) {
-        points.get(index).hide();
-        points.remove(index);
+        if(index < points.size()) {
+            if (index > 0)
+                selectPoint(index - 1);
+            points.get(index).hide();
+            points.remove(index);
+            for (int i = 0; i < points.size(); i++)
+                points.get(i).setIndex(i);
+        }
     }
 
     void selectPoint(int i) {
@@ -62,18 +69,18 @@ public class Profile {
     }
 
     int getSelectedPointIndex() {
-        return selectedPoint;
+        return Objects.requireNonNull(selectedPoint);
     }
 
-    PointView getSelectedPoint() {
+    RandomCircle getSelectedPoint() {
         return points.get(selectedPoint);
     }
 
-    List<PointView> getPoints() {
+    List<RandomCircle> getPoints() {
         return points;
     }
 
-    void setPoints(List<PointView> points) {
+    void setPoints(List<RandomCircle> points) {
         this.points = points;
     }
 
