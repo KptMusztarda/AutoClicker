@@ -7,7 +7,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import me.kptmusztarda.handylib.Logger;
 
 class ProfileManager {
@@ -25,7 +24,7 @@ class ProfileManager {
     private SharedPreferences.Editor prefEditor;
     private Context context;
 
-    private List<Profile> profiles = new ArrayList<>();
+    private List<Profile> profiles;
 
     ProfileManager(Context context) {
         this.context = context;
@@ -36,6 +35,7 @@ class ProfileManager {
     void loadProfiles() {
         String name;
         int sum = pref.getInt(PROFILE_SUM_KEY, 0);
+        profiles = new ArrayList<>(sum);
         for(int i=0; i<sum; i++) {
 
             name = pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_NAME_SUFFIX, "");
@@ -45,21 +45,10 @@ class ProfileManager {
 
             String s = pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_GESTURES_SUFFIX, "");
             if(!s.isEmpty()) {
-                do {
-                    int ind;
-                    int x = Integer.parseInt(s.substring(0, ind = s.indexOf(',')));
-                    int y = Integer.parseInt(s.substring(ind + 1, ind = s.indexOf(',', ind + 1)));
-                    int r = Integer.parseInt(s.substring(ind + 1, ind = s.indexOf(';')));
-
-                    profile.addPoint(x, y, r, false);
-
-                    s = s.substring(ind + 1);
-
-                } while(s.length() > 0);
+                profile.createGesturesFromString(s);
             }
             profiles.add(profile);
         }
-
     }
 
     void addProfile(String s) {
@@ -78,35 +67,30 @@ class ProfileManager {
         }
     }
 
-    void saveProfiles() {
+    private void saveProfiles() {
         for(int i=0; i<profiles.size(); i++) {
-            String profileKey = PROFILE_KEY_PREFIX + i;
-            Profile profile = profiles.get(i);
-            prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, profile.getName());
-
-            StringBuilder builder = new StringBuilder();
-            for (RandomCircle point : profile.getPoints()) {
-                int[] coords = point.getViewCoordinates();
-                builder.append(coords[0]);
-                builder.append(",");
-                builder.append(coords[1]);
-                builder.append(",");
-                builder.append(point.getRandomRadius());
-                builder.append(';');
-            }
-
-            prefEditor.putString(profileKey + PROFILE_GESTURES_SUFFIX, builder.toString());
-
-            Logger.log(TAG, "Saved profile \"" + profile.getName() + "\" on key with id=" + i + " with gestures: " + builder.toString());
+            saveProfile(i);
         }
         prefEditor.putInt(PROFILE_SUM_KEY, profiles.size());
         Logger.log(TAG, "Saved profiles count: " + profiles.size());
         prefEditor.apply();
     }
 
+    void saveProfile(int i) {
+        String profileKey = PROFILE_KEY_PREFIX + i;
+        Profile profile = profiles.get(i);
+        prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, profile.getName());
+
+        prefEditor.putString(profileKey + PROFILE_GESTURES_SUFFIX, profile.toString());
+
+        Logger.log(TAG, "Saved profile \"" + profile.getName() + "\" on key with id=" + i + " with gestures: " + profile.toString());
+        prefEditor.apply();
+    }
+
     ArrayList<String> getProfilesNames() {
         ArrayList<String> profilesNames = new ArrayList<>();
         for(Profile profile : profiles) {
+
             profilesNames.add(profile.getName());
         }
         return  profilesNames;

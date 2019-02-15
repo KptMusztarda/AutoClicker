@@ -1,4 +1,4 @@
-package me.kptmusztarda.autoclicker;
+package me.kptmusztarda.autoclicker.gestures;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -8,8 +8,12 @@ import android.graphics.drawable.Drawable;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 
+import me.kptmusztarda.autoclicker.MyWindowManager;
+import me.kptmusztarda.autoclicker.R;
+import me.kptmusztarda.autoclicker.ViewsManager;
 import me.kptmusztarda.handylib.Logger;
 
 public class Gesture extends android.support.v7.widget.AppCompatTextView {
@@ -17,13 +21,18 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     private String TAG;
 
     private int index;
+    private int type;
     int statusBarHeight;
     int viewSize;
     private boolean active;
 
+    private int pointX;
+    private int pointY;
+
+    int drawableId;
 
     private MyWindowManager windowManager;
-    private WindowManager.LayoutParams params;
+    WindowManager.LayoutParams params;
 
 
 
@@ -31,9 +40,10 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     private ViewsManager viewsManager = ViewsManager.getInstance();
 
 
-    public Gesture(Context context,int index, String TAG, int x, int y) {
+    public Gesture(Context context, int index, String TAG, int drawableId, int x, int y) {
         super(context);
         this.TAG = TAG;
+        this.drawableId = drawableId;
 
         windowManager = new MyWindowManager(context);
 
@@ -58,11 +68,6 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         params.gravity = Gravity.TOP | Gravity.START;
         params.height = params.width = viewSize;
 
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-        }
-
         setColorToActive(true);
         setIndex(index);
     }
@@ -85,20 +90,20 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
                 offsetY = (int) event.getRawY() - coords[1];
 
                 break;
-
             case MotionEvent.ACTION_MOVE:
                 setViewCoordinates((int) event.getRawX() - offsetX, (int) event.getRawY() - offsetY);
-//                            Logger.log(TAG, "Action move; New position=" + ((int) event.getRawX() - offsetX) + " " + ((int) event.getRawY() - offsetY));
-                windowManager.updateViewLayout(this, getParams());
-//                viewsManager.getBackgroundView().updatePoint(index, getPointCoordinates(), getRandomRadius());
-//                viewsManager.getBackgroundView().invalidate();
-
+//              Logger.log(TAG, "Action move; New position=" + ((int) event.getRawX() - offsetX) + " " + ((int) event.getRawY() - offsetY));
+                onMove();
 
                 break;
-
         }
 
         return super.onTouchEvent(event);
+    }
+
+    protected void onMove() {
+        windowManager.updateViewLayout(this, getParams());
+        viewsManager.getBackgroundView().invalidate();
     }
 
     protected WindowManager.LayoutParams getParams()  {
@@ -114,11 +119,11 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         return new int[]{params.x, params.y};
     }
 
-    void show() {
+    public void show() {
         windowManager.addView(this, getParams());
     }
 
-    void hide() {
+    public void hide() {
         windowManager.removeViewImmediate(this);
     }
 
@@ -148,8 +153,7 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         } else {
             theme = new ContextThemeWrapper(getContext(), R.style.inactive).getTheme();
         }
-        Drawable drawable = getResources().getDrawable(R.drawable.ic_auto_clicker_point, theme);
+        Drawable drawable = getResources().getDrawable(drawableId, theme);
         setBackground(drawable);
     }
-
 }

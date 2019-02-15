@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -78,7 +77,7 @@ public class MainActivity extends Activity {
                 if (isChecked) {
                     sendBroadcast(new Intent(Accessibility.ACTION_SHOW));
                 } else {
-                    sendBroadcast(new Intent(Accessibility.ACTION_HIDE));
+                    sendBroadcast(new Intent(Accessibility.ACTION_CLOSE));
                 }
             }
         });
@@ -100,7 +99,7 @@ public class MainActivity extends Activity {
 
             popupWindow.showAtLocation(newButton, Gravity.CENTER, 0, 0);
 
-            Button cancel = popupView.findViewById(R.id.new_form_cancel);
+            Button cancel = popupView.findViewById(R.id.new_profile_cancel);
             final boolean cancelDown[] = {false};
             cancel.setOnTouchListener((v12, event) -> {
                 switch (event.getAction()) {
@@ -115,7 +114,7 @@ public class MainActivity extends Activity {
                 return false;
             });
 
-            Button confirm = popupView.findViewById(R.id.new_form_confirm);
+            Button confirm = popupView.findViewById(R.id.new_profile_confirm);
             final boolean cancelUp[] = {false};
             confirm.setOnTouchListener((v12, event) -> {
                 switch (event.getAction()) {
@@ -157,14 +156,16 @@ public class MainActivity extends Activity {
         });
 
         profilesList = findViewById(R.id.profiles_list);
-            updateProfileList();
+        updateProfileList();
 
     }
 
     private void updateProfileList() {
-//        ArrayList<String> list = profileManager.getProfilesNames();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profileManager.getProfilesNames());
+        ArrayList<String> list = profileManager.getProfilesNames();
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
         profilesList.setAdapter(adapter);
+        if(list.size() > 0) loadButton.setClickable(true);
+        else loadButton.setClickable(false);
     }
 
 

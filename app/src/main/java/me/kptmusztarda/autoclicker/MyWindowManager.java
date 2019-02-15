@@ -13,7 +13,7 @@ public class MyWindowManager {
     private final static String TAG = "MyWindowManager";
     private WindowManager windowManager;
 
-    MyWindowManager(Context context) {
+    public MyWindowManager(Context context) {
         windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
     }
 
@@ -21,7 +21,7 @@ public class MyWindowManager {
         return windowManager.getDefaultDisplay();
     }
 
-    void removeViewImmediate(View view) {
+    public void removeViewImmediate(View view) {
         try {
             windowManager.removeViewImmediate(view);
             Logger.log(TAG, "Removing view");
@@ -33,7 +33,7 @@ public class MyWindowManager {
         }
     }
 
-    void addView(View view, ViewGroup.LayoutParams params) {
+    public void addView(View view, ViewGroup.LayoutParams params) {
         try {
             windowManager.addView(view, params);
             Logger.log(TAG, "Adding vied");
@@ -45,7 +45,7 @@ public class MyWindowManager {
         }
     }
 
-    void updateViewLayout(View view, ViewGroup.LayoutParams params) {
+    public void updateViewLayout(View view, ViewGroup.LayoutParams params) {
         try {
             windowManager.updateViewLayout(view, params);
         } catch (Exception e) {

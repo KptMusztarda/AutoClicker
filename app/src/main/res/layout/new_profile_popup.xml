@@ -11,7 +11,7 @@
         android:layout_height="16dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:text="New profile name"
+        android:text="@string/new_profile_name"
         app:layout_constraintBottom_toTopOf="@+id/new_form_name"
         app:layout_constraintStart_toStartOf="@+id/new_form_name"
         app:layout_constraintTop_toTopOf="parent"
@@ -22,40 +22,40 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="7dp"
         android:ems="10"
         android:inputType="text|textPersonName"
-        android:text="Name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintTop_toBottomOf="@+id/textView3"
+        android:importantForAutofill="no" />
 
     <Button
-        android:id="@+id/new_form_cancel"
+        android:id="@+id/new_profile_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:text="Cancel"
+        android:text="@string/cancel"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/new_form_confirm"
+        app:layout_constraintEnd_toStartOf="@+id/new_profile_confirm"
         app:layout_constraintStart_toStartOf="@+id/new_form_name"
         app:layout_constraintTop_toBottomOf="@+id/new_form_name"
         app:layout_constraintVertical_bias="0.0" />
 
     <Button
-        android:id="@+id/new_form_confirm"
+        android:id="@+id/new_profile_confirm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:text="Confirm"
-        app:layout_constraintBottom_toBottomOf="@+id/new_form_cancel"
+        android:text="@string/confirm"
+        app:layout_constraintBottom_toBottomOf="@+id/new_profile_cancel"
         app:layout_constraintEnd_toEndOf="@+id/new_form_name"
-        app:layout_constraintStart_toEndOf="@+id/new_form_cancel"
-        app:layout_constraintTop_toTopOf="@+id/new_form_cancel" />
+        app:layout_constraintStart_toEndOf="@+id/new_profile_cancel"
+        app:layout_constraintTop_toTopOf="@+id/new_profile_cancel" />
 </android.support.constraint.ConstraintLayout>

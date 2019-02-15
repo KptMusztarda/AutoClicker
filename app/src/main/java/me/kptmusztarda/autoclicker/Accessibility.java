@@ -10,25 +10,34 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.Spinner;
+import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
+import me.kptmusztarda.autoclicker.gestures.Dispatchable;
+import me.kptmusztarda.autoclicker.gestures.Gesture;
+import me.kptmusztarda.autoclicker.gestures.Gestures;
+import me.kptmusztarda.autoclicker.gestures.RandomCircle;
 import me.kptmusztarda.handylib.Logger;
 
 public class Accessibility extends AccessibilityService {
 
     private static final String TAG = "Accessibility";
     public static final String ACTION_SHOW = "me.kptmusztarda.autoclicker.ACTION_SHOW";
-    public static final String ACTION_HIDE = "me.kptmusztarda.autoclicker.ACTION_HIDE";
+    public static final String ACTION_CLOSE = "me.kptmusztarda.autoclicker.ACTION_CLOSE";
     public static final String ACTION_LOAD = "me.kptmusztarda.autoclicker.ACTION_LOAD";
     public static final String EXTRA_PROFILE_ID = "me.kptmusztarda.autoclicker.EXTRA_PROFILE_ID";
 
@@ -36,24 +45,19 @@ public class Accessibility extends AccessibilityService {
     private SettingsLayout settingsLayout;
     private BackgroundView backgroundView;
     private DimView dimView;
-    private GestureDescription gesture;
     private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, increaseRadiusButton, decreaseRadiusButton;
     private View divider;
-    private Timer timer;
+
     private ViewsManager viewsManager;
     private ProfileManager profileManager;
-
     private GestureDispatcher gestureDispatcher;
-
     private Profile profile;
+    private int profileID;
 
-//    private List<BezierPointView> bezierPoints;
     private boolean active = false;
     private boolean editMode = false;
     private boolean dimmed = false;
     private static  boolean isOpened = false;
-    private List<RandomCircle> points = new ArrayList<>();
-    private int activePointIndex = 0;
     private long volumeDownPressTime;
 
     private boolean savedState[] = new boolean[2];
@@ -65,22 +69,17 @@ public class Accessibility extends AccessibilityService {
             Logger.log(TAG, "Received: " + intent.getAction());
 
             switch (intent.getAction()) {
-//                case ACTION_SHOW:
-//
-//                    show();
-//
-//                    break;
-                case ACTION_HIDE:
-
-                    gestureDispatcher.stop();
-                    close();
-
-                    break;
                 case ACTION_LOAD:
 
                     show();
-                    int profileID = intent.getIntExtra(EXTRA_PROFILE_ID, 0);
-                    loadProfile(profileID);
+                    int id = intent.getIntExtra(EXTRA_PROFILE_ID, 0);
+                    loadProfile(id);
+
+                    break;
+                case ACTION_CLOSE:
+
+                    gestureDispatcher.stop();
+                    close();
 
                     break;
                 case Intent.ACTION_SCREEN_OFF:
@@ -131,15 +130,12 @@ public class Accessibility extends AccessibilityService {
 
     }
 
-
-
     @Override
     public void onCreate() {
         super.onCreate();
         Logger.log(TAG, "onCreate");
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_HIDE);
-//        filter.addAction(ACTION_SHOW);
+        filter.addAction(ACTION_CLOSE);
         filter.addAction(ACTION_LOAD);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
@@ -149,7 +145,6 @@ public class Accessibility extends AccessibilityService {
         viewsManager = ViewsManager.getInstance();
         setupViews();
         profileManager = new ProfileManager(this);
-        profileManager.loadProfiles();
 
         gestureDispatcher = new GestureDispatcher() {
             @Override
@@ -158,12 +153,14 @@ public class Accessibility extends AccessibilityService {
             }
 
             @Override
-            void onStart() {
+            void start() {
+                super.start();
                 settingsLayout.setMainSwitchColorToActive(true);
             }
 
             @Override
-            void onStop() {
+            void stop() {
+                super.stop();
                 settingsLayout.setMainSwitchColorToActive(false);
             }
         };
@@ -177,6 +174,8 @@ public class Accessibility extends AccessibilityService {
         viewsManager.setBackgroundView(backgroundView);
 
         settingsLayout = new SettingsLayout(this);
+        viewsManager.setSettingsLayout(settingsLayout);
+
         dimView = new DimView(this);
 
         mainButton = settingsLayout.findViewById(R.id.mainButton);
@@ -210,15 +209,64 @@ public class Accessibility extends AccessibilityService {
 
         addButton = settingsLayout.findViewById(R.id.addButton);
         addButton.setOnClickListener(v -> {
-            int coords[] = new int[2];
-            v.getLocationOnScreen(coords);
-            profile.addPoint(coords[0] + v.getWidth() + 100, coords[1], 0, true);
+
+            LayoutInflater inflater = (LayoutInflater)
+                    getSystemService(LAYOUT_INFLATER_SERVICE);
+            View popupView = inflater.inflate(R.layout.new_gesture_popup, null);
+
+            int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+            int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+            PopupWindow popupWindow = new PopupWindow(popupView, width, height, true);
+
+            popupWindow.showAtLocation(backgroundView, Gravity.CENTER, 0, 0);
+
+            Spinner spinner = popupView.findViewById(R.id.new_gesture_list);
+            spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, Gestures.getNamesList()));
+
+            Button cancel = popupView.findViewById(R.id.new_gesture_cancel);
+            final boolean cancelDown[] = {false};
+            cancel.setOnTouchListener((v12, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        cancelDown[0] = true;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if(cancelDown[0]) popupWindow.dismiss();
+                        cancelDown[0] = false;
+                        break;
+                }
+                return false;
+            });
+
+            Button confirm = popupView.findViewById(R.id.new_gesture_confirm);
+            final boolean cancelUp[] = {false};
+            confirm.setOnTouchListener((v12, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        cancelUp[0] = true;
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if(cancelUp[0]) {
+
+                            int type = (int) spinner.getSelectedItemId();
+
+                            int coords[] = new int[2];
+                            v.getLocationOnScreen(coords);
+                            profile.addGesture(type, coords[0] + v.getWidth() + 100, coords[1], 0, true);
+
+                        }
+                        cancelUp[0] = false;
+                        break;
+                }
+                return false;
+            });
         });
         addButton.setVisibility(View.GONE);
 
         removeButton = settingsLayout.findViewById(R.id.removeButton);
         removeButton.setOnClickListener(v -> {
-            profile.removePoint(profile.getSelectedPointIndex());
+            profile.removePoint(profile.getSelectedGestureIndex());
+            backgroundView.invalidate();
         });
         removeButton.setVisibility(View.GONE);
 
@@ -245,41 +293,39 @@ public class Accessibility extends AccessibilityService {
         divider = settingsLayout.findViewById(R.id.divider);
         divider.setVisibility(View.GONE);
 
-//        increaseRadiusButton = settingsLayout.findViewById(R.id.increaseRadiusButton);
-//        increaseRadiusButton.setOnClickListener(v -> {
-//            if(points.size() > 0) {
-//                PointView p = points.get(activePointIndex);
-//                p.setRandomRadius(p.getRandomRadius() + 10);
-//                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
-//                backgroundView.invalidate();
-//            }
-//        });
-//        increaseRadiusButton.setVisibility(View.GONE);
-//
-//        decreaseRadiusButton = settingsLayout.findViewById(R.id.decreaseRadiusButtonimageButton2);
-//        decreaseRadiusButton.setOnClickListener(v -> {
-//            if(points.size() > 0) {
-//                PointView p = points.get(activePointIndex);
-//                p.setRandomRadius(p.getRandomRadius() - 10);
-//                backgroundView.updatePoint(activePointIndex, p.getPointCoordinates(), p.getRandomRadius());
-//                backgroundView.invalidate();
-//            }
-//        });
-//        decreaseRadiusButton.setVisibility(View.GONE);
+        increaseRadiusButton = settingsLayout.findViewById(R.id.increaseRadiusButton);
+        increaseRadiusButton.setOnClickListener(v -> {
+                RandomCircle p = (RandomCircle) profile.getSelectedGesture();
+                p.setRadius(p.getRadius() + 10);
+                backgroundView.invalidate();
+
+        });
+        increaseRadiusButton.setVisibility(View.GONE);
+
+        decreaseRadiusButton = settingsLayout.findViewById(R.id.decreaseRadiusButtonimageButton2);
+        decreaseRadiusButton.setOnClickListener(v -> {
+            RandomCircle p = (RandomCircle) profile.getSelectedGesture();
+            p.setRadius(p.getRadius() - 10);
+            backgroundView.invalidate();
+        });
+        decreaseRadiusButton.setVisibility(View.GONE);
     }
 
     private void loadProfile(int profileID) {
 
+        if(profile != null) enableEditMode(false); //saves previous profile and removes views
+
+        profileManager.loadProfiles();
+        this.profileID = profileID;
         profile = profileManager.getProfile(profileID);
 
         Logger.log(TAG, "Loading profile " + profileID + " named \"" + profile.getName() + "\"");
 
         gestureDispatcher.setProfile(profile);
-//        for(PointView gesture : gestures) {
-//            gesture.show();
-//        }
-
+        backgroundView.setProfile(profile);
     }
+
+
 
     @Override
     public boolean onKeyEvent(KeyEvent event) {
@@ -308,28 +354,28 @@ public class Accessibility extends AccessibilityService {
 
         if(b) {
             windowManager.addView(backgroundView, backgroundView.getParams());
-            for(RandomCircle view : profile.getPoints()) {
+            for(Dispatchable view : profile.getGestures()) {
                 view.show();
             }
             addButton.setVisibility(View.VISIBLE);
             removeButton.setVisibility(View.VISIBLE);
             divider.setVisibility(View.VISIBLE);
-//            increaseRadiusButton.setVisibility(View.VISIBLE);
-//            decreaseRadiusButton.setVisibility(View.VISIBLE);
+            increaseRadiusButton.setVisibility(View.VISIBLE);
+            decreaseRadiusButton.setVisibility(View.VISIBLE);
         } else {
 
-            profileManager.saveProfiles();
+            profileManager.saveProfile(profileID);
 
-            for(int i=profile.getPoints().size()-1; i>=0; i--) {
-                profile.getPoints().get(i).hide();
+            for(int i = profile.getGestures().size()-1; i>=0; i--) {
+                profile.getGestures().get(i).hide();
             }
             windowManager.removeViewImmediate(backgroundView);
 
             addButton.setVisibility(View.GONE);
             removeButton.setVisibility(View.GONE);
-//            divider.setVisibility(View.GONE);
-//            increaseRadiusButton.setVisibility(View.GONE);
-//            decreaseRadiusButton.setVisibility(View.GONE);
+            divider.setVisibility(View.GONE);
+            increaseRadiusButton.setVisibility(View.GONE);
+            decreaseRadiusButton.setVisibility(View.GONE);
         }
         editMode = b;
 

@@ -2,8 +2,10 @@ package me.kptmusztarda.autoclicker;
 
 import android.accessibilityservice.GestureDescription;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import me.kptmusztarda.autoclicker.gestures.Dispatchable;
 import me.kptmusztarda.handylib.Logger;
 
 public class GestureDispatcher {
@@ -27,13 +29,14 @@ public class GestureDispatcher {
             int duration = 10;
             int delay = 20;
 
+            List<Dispatchable> gestures = profile.getGestures();
 
             while(active) {
-                for (int i = 0; i < profile.getPoints().size(); i++) {
+                for (int i = 0; i<gestures.size(); i++) {
 
                     if (!active) break;
 
-                    dispatch(profile.getPoints().get(i).getGesture());
+                    dispatch(gestures.get(i).getGestureDescription());
                     //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
 
                     try {
@@ -52,13 +55,11 @@ public class GestureDispatcher {
         }).start();
 
         Logger.log(TAG, "Loop thread started");
-        onStart();
     }
 
     void stop() {
         Logger.log(TAG, "Stopping");
         active = false;
-        onStop();
     }
 
     public boolean isActive() {
@@ -70,6 +71,4 @@ public class GestureDispatcher {
     }
 
     void dispatch(GestureDescription gesture) {}
-    void onStart() {}
-    void onStop() {}
 }
