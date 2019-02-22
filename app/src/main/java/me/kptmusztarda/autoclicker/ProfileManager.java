@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import me.kptmusztarda.handylib.Logger;
 
@@ -24,7 +25,9 @@ class ProfileManager {
     private SharedPreferences.Editor prefEditor;
     private Context context;
 
-    private List<Profile> profiles;
+    private List<String> names;
+    private List<String> gestures;
+    private Profile loadedProfile;
 
     ProfileManager(Context context) {
         this.context = context;
@@ -33,34 +36,31 @@ class ProfileManager {
     }
 
     void loadProfiles() {
-        String name;
         int sum = pref.getInt(PROFILE_SUM_KEY, 0);
-        profiles = new ArrayList<>(sum);
+
+        names = new ArrayList<>(sum);
+        gestures = new ArrayList<>(sum);
+
         for(int i=0; i<sum; i++) {
+            names.add(pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_NAME_SUFFIX, ""));
+            gestures.add(pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_GESTURES_SUFFIX, ""));
 
-            name = pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_NAME_SUFFIX, "");
-            Logger.log(TAG, "Found a profile named \"" + name + "\" on id=" + i);
-
-            Profile profile = new Profile(context, name);
-
-            String s = pref.getString(PROFILE_KEY_PREFIX + i + PROFILE_GESTURES_SUFFIX, "");
-            if(!s.isEmpty()) {
-                profile.createGesturesFromString(s);
-            }
-            profiles.add(profile);
+            Logger.log(TAG, "Found a profile named \"" + names.get(i) + "\" on id=" + i + " with gestures: \"" + gestures.get(i) + "\"");
         }
     }
 
     void addProfile(String s) {
         Logger.log(TAG, "Adding new profile named \"" + s + "\"");
-        profiles.add(0, new Profile(context, s));
+        names.add(s);
+        gestures.add("");
         saveProfiles();
     }
 
     void deleteProfile(int i) {
-        if(profiles.size() > 0) {
-            Logger.log(TAG, "Deleting profile " + i + " named \"" + profiles.get(i) + "\"");
-            profiles.remove(i);
+        if(names.size() > 0) {
+            Logger.log(TAG, "Deleting profile " + i + " named \"" + names.get(i) + "\"");
+            names.remove(i);
+            gestures.remove(i);
             saveProfiles();
         } else {
             Toast.makeText(context, "No profile selected", Toast.LENGTH_SHORT).show();
@@ -68,35 +68,34 @@ class ProfileManager {
     }
 
     private void saveProfiles() {
-        for(int i=0; i<profiles.size(); i++) {
-            saveProfile(i);
+        for(int i=0; i<names.size(); i++) {
+            String profileKey = PROFILE_KEY_PREFIX + i;
+            prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, names.get(i));
+            prefEditor.putString(profileKey + PROFILE_GESTURES_SUFFIX, gestures.get(i));
         }
-        prefEditor.putInt(PROFILE_SUM_KEY, profiles.size());
-        Logger.log(TAG, "Saved profiles count: " + profiles.size());
+        prefEditor.putInt(PROFILE_SUM_KEY, names.size());
+        Logger.log(TAG, "Saved profiles count: " + names.size());
         prefEditor.apply();
     }
 
     void saveProfile(int i) {
         String profileKey = PROFILE_KEY_PREFIX + i;
-        Profile profile = profiles.get(i);
-        prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, profile.getName());
 
-        prefEditor.putString(profileKey + PROFILE_GESTURES_SUFFIX, profile.toString());
+        prefEditor.putString(profileKey + PROFILE_NAME_SUFFIX, loadedProfile.getName());
+        prefEditor.putString(profileKey + PROFILE_GESTURES_SUFFIX, loadedProfile.toString());
 
-        Logger.log(TAG, "Saved profile \"" + profile.getName() + "\" on key with id=" + i + " with gestures: " + profile.toString());
+        Logger.log(TAG, "Saved profile \"" + loadedProfile.getName() + "\" on key with id=" + i + " with gestures: " + loadedProfile.toString());
         prefEditor.apply();
     }
 
-    ArrayList<String> getProfilesNames() {
-        ArrayList<String> profilesNames = new ArrayList<>();
-        for(Profile profile : profiles) {
-
-            profilesNames.add(profile.getName());
-        }
-        return  profilesNames;
+    List<String> getProfilesNames() {
+        return names;
     }
 
     Profile getProfile(int i) {
-        return profiles.get(i);
+        Profile profile = new Profile(context, names.get(i));
+        profile.createGesturesFromString(gestures.get(i));
+        loadedProfile = profile;
+        return loadedProfile;
     }
 }

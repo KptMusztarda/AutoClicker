@@ -33,7 +33,7 @@ public class ViewsManager {
     public int getStatusBarHeight() {
         int[] absolutePosition = new int[2];
         settingsLayout.getLocationOnScreen(absolutePosition);
-        System.out.println("Status bar height: " + (absolutePosition[1] - settingsLayout.getParams().y));
+//        System.out.println("Status bar height: " + (absolutePosition[1] - settingsLayout.getParams().y));
         return absolutePosition[1] - settingsLayout.getParams().y;
     }
 }

@@ -180,11 +180,11 @@ public class Accessibility extends AccessibilityService {
 
         mainButton = settingsLayout.findViewById(R.id.mainButton);
         mainButton.setOnTouchListener((v, event) -> {
-            switch(event.getAction()) {
+            switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     Logger.log(TAG, "Button clicked");
-                    if(!gestureDispatcher.isActive()) {
-                        if(editMode) enableEditMode(false);
+                    if (!gestureDispatcher.isActive()) {
+                        if (editMode) enableEditMode(false);
                         gestureDispatcher.start();
                     } else gestureDispatcher.stop();
                     break;
@@ -195,10 +195,10 @@ public class Accessibility extends AccessibilityService {
 
         editButton = settingsLayout.findViewById(R.id.editButton);
         editButton.setOnTouchListener((v, event) -> {
-            switch(event.getAction()) {
+            switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    if(editMode) enableEditMode(false);
-                    else if(gestureDispatcher.isActive()) {
+                    if (editMode) enableEditMode(false);
+                    else if (gestureDispatcher.isActive()) {
                         gestureDispatcher.stop();
                         enableEditMode(true);
                     } else enableEditMode(true);
@@ -231,7 +231,7 @@ public class Accessibility extends AccessibilityService {
                         cancelDown[0] = true;
                         break;
                     case MotionEvent.ACTION_UP:
-                        if(cancelDown[0]) popupWindow.dismiss();
+                        if (cancelDown[0]) popupWindow.dismiss();
                         cancelDown[0] = false;
                         break;
                 }
@@ -246,7 +246,7 @@ public class Accessibility extends AccessibilityService {
                         cancelUp[0] = true;
                         break;
                     case MotionEvent.ACTION_UP:
-                        if(cancelUp[0]) {
+                        if (cancelUp[0]) {
 
                             int type = (int) spinner.getSelectedItemId();
 
@@ -272,7 +272,7 @@ public class Accessibility extends AccessibilityService {
 
         dimButton = settingsLayout.findViewById(R.id.dimButton);
         dimButton.setOnTouchListener((v, event) -> {
-            switch(event.getAction()) {
+            switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     dim();
                     break;
@@ -282,33 +282,13 @@ public class Accessibility extends AccessibilityService {
 
         closeButton = settingsLayout.findViewById(R.id.closeButton);
         closeButton.setOnTouchListener((v, event) -> {
-            switch(event.getAction()) {
+            switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     close();
                     break;
             }
             return false;
         });
-
-        divider = settingsLayout.findViewById(R.id.divider);
-        divider.setVisibility(View.GONE);
-
-        increaseRadiusButton = settingsLayout.findViewById(R.id.increaseRadiusButton);
-        increaseRadiusButton.setOnClickListener(v -> {
-                RandomCircle p = (RandomCircle) profile.getSelectedGesture();
-                p.setRadius(p.getRadius() + 10);
-                backgroundView.invalidate();
-
-        });
-        increaseRadiusButton.setVisibility(View.GONE);
-
-        decreaseRadiusButton = settingsLayout.findViewById(R.id.decreaseRadiusButtonimageButton2);
-        decreaseRadiusButton.setOnClickListener(v -> {
-            RandomCircle p = (RandomCircle) profile.getSelectedGesture();
-            p.setRadius(p.getRadius() - 10);
-            backgroundView.invalidate();
-        });
-        decreaseRadiusButton.setVisibility(View.GONE);
     }
 
     private void loadProfile(int profileID) {
@@ -350,18 +330,13 @@ public class Accessibility extends AccessibilityService {
         } else return super.onKeyEvent(event);
     }
 
-    private void enableEditMode(boolean b) {
+    private void enableEditMode(boolean enabled) {
 
-        if(b) {
+        if(enabled) {
             windowManager.addView(backgroundView, backgroundView.getParams());
-            for(Dispatchable view : profile.getGestures()) {
+            for(Dispatchable view : profile.getGestures())
                 view.show();
-            }
-            addButton.setVisibility(View.VISIBLE);
-            removeButton.setVisibility(View.VISIBLE);
-            divider.setVisibility(View.VISIBLE);
-            increaseRadiusButton.setVisibility(View.VISIBLE);
-            decreaseRadiusButton.setVisibility(View.VISIBLE);
+            settingsLayout.setEditMode(enabled);
         } else {
 
             profileManager.saveProfile(profileID);
@@ -370,16 +345,11 @@ public class Accessibility extends AccessibilityService {
                 profile.getGestures().get(i).hide();
             }
             windowManager.removeViewImmediate(backgroundView);
-
-            addButton.setVisibility(View.GONE);
-            removeButton.setVisibility(View.GONE);
-            divider.setVisibility(View.GONE);
-            increaseRadiusButton.setVisibility(View.GONE);
-            decreaseRadiusButton.setVisibility(View.GONE);
+            settingsLayout.setEditMode(enabled);
         }
-        editMode = b;
+        editMode = enabled;
 
-//        windowManager.updateViewLayout(settingsLayout, settingsLayout.getParams());
+        windowManager.updateViewLayout(settingsLayout, settingsLayout.getParams());
     }
 
 

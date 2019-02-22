@@ -3,13 +3,16 @@ package me.kptmusztarda.autoclicker.gestures;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 import me.kptmusztarda.autoclicker.MyWindowManager;
 import me.kptmusztarda.autoclicker.R;
@@ -18,32 +21,39 @@ import me.kptmusztarda.handylib.Logger;
 
 public class Gesture extends android.support.v7.widget.AppCompatTextView {
 
+    class EditButton extends android.support.v7.widget.AppCompatImageButton {
+        EditButton(Context context) {
+            super(context);
+            setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT));
+            setBackgroundColor(Color.TRANSPARENT);
+            setScaleType(ScaleType.FIT_CENTER);
+            setAdjustViewBounds(true);
+
+            LinearLayout.MarginLayoutParams params = (LinearLayout.MarginLayoutParams) getLayoutParams();
+            int margin = (int) (8 * (context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT) + 0.5f);
+            params.topMargin = margin;
+            params.setMarginStart(margin);
+            params.setMarginEnd(margin);
+            setLayoutParams(params);
+        }
+    }
+
+
     private String TAG;
 
     private int index;
-    private int type;
-    int statusBarHeight;
-    int viewSize;
     private boolean active;
-
-    private int pointX;
-    private int pointY;
-
-    int drawableId;
-
-    private MyWindowManager windowManager;
+    int viewSize;
+    int drawableID;
     WindowManager.LayoutParams params;
 
-
-
-    private Context context;
+    private MyWindowManager windowManager;
     private ViewsManager viewsManager = ViewsManager.getInstance();
 
-
-    public Gesture(Context context, int index, String TAG, int drawableId, int x, int y) {
+    public Gesture(Context context, int index, String TAG, int drawableID, int x, int y) {
         super(context);
         this.TAG = TAG;
-        this.drawableId = drawableId;
+        this.drawableID = drawableID;
 
         windowManager = new MyWindowManager(context);
 
@@ -100,7 +110,6 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
 
         return super.onTouchEvent(event);
     }
-
     protected void onMove() {
         windowManager.updateViewLayout(this, getParams());
         viewsManager.getBackgroundView().invalidate();
@@ -114,7 +123,6 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         params.x = x;
         params.y = y;
     }
-
     protected int[] getViewCoordinates() {
         return new int[]{params.x, params.y};
     }
@@ -122,13 +130,8 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     public void show() {
         windowManager.addView(this, getParams());
     }
-
     public void hide() {
         windowManager.removeViewImmediate(this);
-    }
-
-    public int getIndex() {
-        return index;
     }
 
     @SuppressLint("SetTextI18n")
@@ -136,14 +139,16 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         this.index = index;
         setText(Integer.toString(this.index + 1));
     }
-
-    public boolean isActive() {
-        return active;
+    public int getIndex() {
+        return index;
     }
 
     public void setActive(boolean active) {
         this.active = active;
         setColorToActive(active);
+    }
+    public boolean isActive() {
+        return active;
     }
 
     protected void setColorToActive(boolean b) {
@@ -153,7 +158,8 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
         } else {
             theme = new ContextThemeWrapper(getContext(), R.style.inactive).getTheme();
         }
-        Drawable drawable = getResources().getDrawable(drawableId, theme);
+        Drawable drawable = getResources().getDrawable(drawableID, theme);
         setBackground(drawable);
     }
+
 }

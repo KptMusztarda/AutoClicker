@@ -4,18 +4,26 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
-import android.support.constraint.ConstraintLayout;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
-public class SettingsLayout extends ConstraintLayout {
+import me.kptmusztarda.handylib.Logger;
+
+public class SettingsLayout extends LinearLayout {
+
+    private static final String TAG = "SettingsLayout";
+    private ImageButton gestureEditButtons[] = new ImageButton[0];
+    private boolean inEditMode;
 
     public SettingsLayout(Context context) {
         super(context);
         inflate(context, R.layout.settings_panel, this);
-        this.setBackgroundColor(getResources().getColor(R.color.color_settings_background, null));
+        setOrientation(VERTICAL);
+        setEditMode(false);
+        setBackground(getResources().getDrawable(R.drawable.settings_border, null));
     }
 
     protected WindowManager.LayoutParams getParams()  {
@@ -48,6 +56,38 @@ public class SettingsLayout extends ConstraintLayout {
         Drawable drawable = getResources().getDrawable(R.drawable.ic_on_off, theme);
         ImageButton imageButton =  findViewById(R.id.mainButton);
         imageButton.setImageDrawable(drawable);
+    }
+
+    void setEditMode(boolean enabled) {
+        if(enabled) {
+            findViewById(R.id.addButton).setVisibility(VISIBLE);
+            findViewById(R.id.removeButton).setVisibility(VISIBLE);
+            for(ImageButton button : gestureEditButtons)
+                button.setVisibility(VISIBLE);
+        } else {
+            findViewById(R.id.addButton).setVisibility(GONE);
+            findViewById(R.id.removeButton).setVisibility(GONE);
+            for(ImageButton button : gestureEditButtons)
+                button.setVisibility(GONE);
+        }
+        inEditMode = enabled;
+    }
+
+    public void setGestureEditButtons(ImageButton buttons[]) {
+
+        LinearLayout layout = findViewById(R.id.settings_linear);
+
+        for(ImageButton button : gestureEditButtons)
+            layout.removeView(button);
+
+        for(ImageButton button : buttons) {
+            layout.addView(button);
+            if(!inEditMode) button.setVisibility(GONE);
+        }
+
+
+        gestureEditButtons = buttons;
+
     }
 
 }

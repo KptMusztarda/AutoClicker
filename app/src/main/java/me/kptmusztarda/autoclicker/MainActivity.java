@@ -24,6 +24,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import me.kptmusztarda.handylib.Logger;
 
@@ -151,8 +152,11 @@ public class MainActivity extends Activity {
 
         deleteButton = findViewById(R.id.delete_profile_button);
         deleteButton.setOnClickListener(v -> {
+            if(Accessibility.isOpened()) Toast.makeText(this, "Close the Auto Clicker to delete a profile", Toast.LENGTH_SHORT).show();
+            else {
             profileManager.deleteProfile(profilesList.getSelectedItemPosition());
             updateProfileList();
+            }
         });
 
         profilesList = findViewById(R.id.profiles_list);
@@ -161,7 +165,7 @@ public class MainActivity extends Activity {
     }
 
     private void updateProfileList() {
-        ArrayList<String> list = profileManager.getProfilesNames();
+        List<String> list = profileManager.getProfilesNames();
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, list);
         profilesList.setAdapter(adapter);
         if(list.size() > 0) loadButton.setClickable(true);

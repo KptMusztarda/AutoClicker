@@ -37,9 +37,9 @@ public class Profile {
             case RANDOM_CIRCLE:
                 gesture = new RandomCircle(context, gestures.size(), x, y, 0) {
                     @Override
-                    protected void onMove() {
-                        super.onMove();
-                        selectPoint(getIndex());
+                    public void setActive(boolean active) {
+                        super.setActive(active);
+                        if(active)selectPoint(getIndex());
                     }
                 };
                 break;
@@ -66,9 +66,9 @@ public class Profile {
             case RANDOM_CIRCLE:
                 gesture = new RandomCircle(context, gestures.size(), str) {
                     @Override
-                    protected void onMove() {
-                        super.onMove();
-                        selectPoint(getIndex());
+                    public void setActive(boolean active) {
+                        super.setActive(active);
+                        if(active)selectPoint(getIndex());
                     }
                 };
                 break;
@@ -88,7 +88,7 @@ public class Profile {
         Logger.log(TAG, "Saved gestures: " + string);
         String str[] = string.split(";");
         for(String s: str) {
-            addGesture(s, false);
+            if(!s.isEmpty()) addGesture(s, false);
         }
     }
 
@@ -141,4 +141,5 @@ public class Profile {
         }
         return builder.toString();
     }
+
 }

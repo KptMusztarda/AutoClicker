@@ -5,9 +5,15 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import me.kptmusztarda.autoclicker.R;
 import me.kptmusztarda.autoclicker.ViewsManager;
+
 
 public class RandomCircle extends Gesture implements Dispatchable {
 
@@ -18,15 +24,8 @@ public class RandomCircle extends Gesture implements Dispatchable {
 
 
     public RandomCircle(Context context, int index, int x, int y, int radius) {
-        super(context, index, TAG, DRAWABLE_ID, x, y);
-
-        setRadius(radius);
-
-
-        setTextAlignment(TEXT_ALIGNMENT_CENTER);
-        setTextColor(getResources().getColor(R.color.color_index, null));
-
-
+        super(context, index, TAG, DRAWABLE_ID, 0, 0);
+        init(x, y, radius);
     }
 
     public RandomCircle(Context context, int index, String str) {
@@ -37,11 +36,12 @@ public class RandomCircle extends Gesture implements Dispatchable {
         int y = Integer.parseInt(s[2]);
         int r = Integer.parseInt(s[3]);
 
+        init(x, y, r);
+    }
+
+    private void init(int x, int y, int r) {
         setViewCoordinates(x, y);
         setRadius(r);
-
-        drawableId = R.drawable.ic_auto_clicker_point;
-
         setTextAlignment(TEXT_ALIGNMENT_CENTER);
         setTextColor(getResources().getColor(R.color.color_index, null));
     }
@@ -51,17 +51,10 @@ public class RandomCircle extends Gesture implements Dispatchable {
         return TYPE + "," + params.x + "," + params.y + "," + radius;
     }
 
-
-    protected void setPointCoordinates(int x, int y) {
-        getParams().x = x - viewSize/2;
-        getParams().y = y - viewSize/2;
-//        Logger.log(TAG, "New point " + index + " coordinates are: " + params.x + " " + params.y);
-    }
-
     protected int[] getPointCoordinates() {
-        int coords[] = new int[2];
-        coords[0] = params.x + (viewSize/2);
-        coords[1] = params.y + (viewSize/2) + ViewsManager.getInstance().getStatusBarHeight();
+        int coords[] = getViewCoordinates();
+        coords[0] += viewSize/2;
+        coords[1] += viewSize/2 + ViewsManager.getInstance().getStatusBarHeight();
         return coords;
     }
 
@@ -89,12 +82,7 @@ public class RandomCircle extends Gesture implements Dispatchable {
         int x = (int) (arr[0] + r * Math.cos(a));
         int y = (int) (arr[1] + r * Math.sin(a));
 
-        //Logger.log(TAG, "Point " + i);
-//                        Logger.log(TAG, "coords=" + arr[0] + "," + arr[1]);
-//                        Logger.log(TAG, "Random coords=" + x + "," + y);
-
         path.moveTo(x, y);
-
         builder.addStroke(new GestureDescription.StrokeDescription(path, 0, 10));
 
         return builder.build();
@@ -103,6 +91,30 @@ public class RandomCircle extends Gesture implements Dispatchable {
     @Override
     public void drawOnBackground(Canvas c, Paint paint) {
         int[] arr = getPointCoordinates();
-        c.drawCircle(arr[0], arr[1], radius,  paint);
+        c.drawCircle(arr[0], arr[1] - ViewsManager.getInstance().getStatusBarHeight(), radius,  paint);
     }
+
+    @Override
+    public void setActive(boolean active) {
+        super.setActive(active);
+        ViewsManager.getInstance().getSettingsLayout().setGestureEditButtons(getGestureEditButtons());
+    }
+
+    @Override
+    public ImageButton[] getGestureEditButtons() {
+        ImageButton[] buttons = new ImageButton[2];
+
+        buttons[0] = new EditButton(getContext());
+        buttons[0].setImageResource(R.drawable.ic_radius_increase);
+        buttons[0].setOnClickListener(v -> setRadius(radius + 10));
+
+        buttons[1] = new EditButton(getContext());
+        buttons[1].setImageResource(R.drawable.ic_radius_decrease);
+        buttons[1].setOnClickListener(v -> setRadius(radius - 10));
+
+        return buttons;
+    }
+
 }
+
+
