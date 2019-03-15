@@ -210,20 +210,13 @@ public class Accessibility extends AccessibilityService {
         addButton = settingsLayout.findViewById(R.id.addButton);
         addButton.setOnClickListener(v -> {
 
-            LayoutInflater inflater = (LayoutInflater)
-                    getSystemService(LAYOUT_INFLATER_SERVICE);
-            View popupView = inflater.inflate(R.layout.new_gesture_popup, null);
+            NewGesturePopup popup = new NewGesturePopup(this);
+            windowManager.addView(popup, popup.getParams());
 
-            int width = LinearLayout.LayoutParams.WRAP_CONTENT;
-            int height = LinearLayout.LayoutParams.WRAP_CONTENT;
-            PopupWindow popupWindow = new PopupWindow(popupView, width, height, true);
-
-            popupWindow.showAtLocation(backgroundView, Gravity.CENTER, 0, 0);
-
-            Spinner spinner = popupView.findViewById(R.id.new_gesture_list);
+            Spinner spinner = popup.findViewById(R.id.new_gesture_list);
             spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, Gestures.getNamesList()));
 
-            Button cancel = popupView.findViewById(R.id.new_gesture_cancel);
+            Button cancel = popup.findViewById(R.id.new_gesture_cancel);
             final boolean cancelDown[] = {false};
             cancel.setOnTouchListener((v12, event) -> {
                 switch (event.getAction()) {
@@ -231,14 +224,14 @@ public class Accessibility extends AccessibilityService {
                         cancelDown[0] = true;
                         break;
                     case MotionEvent.ACTION_UP:
-                        if (cancelDown[0]) popupWindow.dismiss();
+                        if (cancelDown[0]) windowManager.removeViewImmediate(popup);
                         cancelDown[0] = false;
                         break;
                 }
                 return false;
             });
 
-            Button confirm = popupView.findViewById(R.id.new_gesture_confirm);
+            Button confirm = popup.findViewById(R.id.new_gesture_confirm);
             final boolean cancelUp[] = {false};
             confirm.setOnTouchListener((v12, event) -> {
                 switch (event.getAction()) {

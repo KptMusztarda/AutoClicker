@@ -8,4 +8,6 @@
     <color name="color_index">#5b0073ff</color>
     <color name="color_dim">#000000</color>
     <color name="color_transparent">#00000000</color>
+    <color name="color_popup_background">#9F000000</color>
+    <color name="color_popup_layout">#FFFFFF</color>
 </resources>
