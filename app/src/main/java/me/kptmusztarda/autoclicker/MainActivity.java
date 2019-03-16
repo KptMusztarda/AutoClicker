@@ -31,7 +31,7 @@ import me.kptmusztarda.handylib.Logger;
 public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
-    private Switch main, accessibilitySwitch;
+    private Switch accessibilitySwitch;
     private ProfileManager profileManager;
     private Spinner profilesList;
     private Button newButton, loadButton, deleteButton;
@@ -69,17 +69,6 @@ public class MainActivity extends Activity {
             if(!resuming) {
                 Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
                 startActivity(intent);
-            }
-        });
-
-        main = findViewById(R.id.switchh);
-        main.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if(!resuming) {
-                if (isChecked) {
-                    sendBroadcast(new Intent(Accessibility.ACTION_SHOW));
-                } else {
-                    sendBroadcast(new Intent(Accessibility.ACTION_CLOSE));
-                }
             }
         });
 
@@ -177,7 +166,6 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         resuming = true;
-        main.setChecked(Accessibility.isOpened());
         accessibilitySwitch.setChecked(isAccessibilityEnabled());
         resuming = false;
     }

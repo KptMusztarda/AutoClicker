@@ -11,12 +11,11 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.WindowManager;
-import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
 import me.kptmusztarda.autoclicker.MyWindowManager;
 import me.kptmusztarda.autoclicker.R;
-import me.kptmusztarda.autoclicker.ViewsManager;
+import me.kptmusztarda.autoclicker.views.ViewsManager;
 import me.kptmusztarda.handylib.Logger;
 
 public class Gesture extends android.support.v7.widget.AppCompatTextView {
@@ -46,6 +45,8 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     int viewSize;
     int drawableID;
     WindowManager.LayoutParams params;
+    int delay = 20;
+    int time = 10;
 
     private MyWindowManager windowManager;
     private ViewsManager viewsManager = ViewsManager.getInstance();
@@ -125,6 +126,20 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     }
     protected int[] getViewCoordinates() {
         return new int[]{params.x, params.y};
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+
+    public int getTime() {
+        return time;
+    }
+    public void setTime(int time) {
+        this.time = time;
     }
 
     public void show() {

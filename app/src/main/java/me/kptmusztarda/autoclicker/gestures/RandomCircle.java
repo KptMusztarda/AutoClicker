@@ -5,14 +5,10 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import me.kptmusztarda.autoclicker.R;
-import me.kptmusztarda.autoclicker.ViewsManager;
+import me.kptmusztarda.autoclicker.views.ViewsManager;
 
 
 public class RandomCircle extends Gesture implements Dispatchable {
@@ -20,12 +16,12 @@ public class RandomCircle extends Gesture implements Dispatchable {
     private static final String TAG = "RandomCircle";
     private static final int DRAWABLE_ID = R.drawable.ic_auto_clicker_point;
     private static final int TYPE = 0;
-    private int radius;
+    private int radius = 20;
 
 
-    public RandomCircle(Context context, int index, int x, int y, int radius) {
+    public RandomCircle(Context context, int index, int x, int y) {
         super(context, index, TAG, DRAWABLE_ID, 0, 0);
-        init(x, y, radius);
+        init(x, y, 20, 10, 20);
     }
 
     public RandomCircle(Context context, int index, String str) {
@@ -34,13 +30,17 @@ public class RandomCircle extends Gesture implements Dispatchable {
         String s[] = str.split(",");
         int x = Integer.parseInt(s[1]);
         int y = Integer.parseInt(s[2]);
-        int r = Integer.parseInt(s[3]);
+        int d = Integer.parseInt(s[3]);
+        int t = Integer.parseInt(s[4]);
+        int r = Integer.parseInt(s[5]);
 
-        init(x, y, r);
+        init(x, y, d, t, r);
     }
 
-    private void init(int x, int y, int r) {
+    private void init(int x, int y, int d, int t, int r) {
         setViewCoordinates(x, y);
+        setDelay(d);
+        setTime(t);
         setRadius(r);
         setTextAlignment(TEXT_ALIGNMENT_CENTER);
         setTextColor(getResources().getColor(R.color.color_index, null));
@@ -48,7 +48,7 @@ public class RandomCircle extends Gesture implements Dispatchable {
 
     @Override
     public String toString() {
-        return TYPE + "," + params.x + "," + params.y + "," + radius;
+        return TYPE + "," + params.x + "," + params.y + "," + delay + "," + time + "," + radius;
     }
 
     protected int[] getPointCoordinates() {
@@ -83,7 +83,7 @@ public class RandomCircle extends Gesture implements Dispatchable {
         int y = (int) (arr[1] + r * Math.sin(a));
 
         path.moveTo(x, y);
-        builder.addStroke(new GestureDescription.StrokeDescription(path, 0, 10));
+        builder.addStroke(new GestureDescription.StrokeDescription(path, 0, time));
 
         return builder.build();
     }

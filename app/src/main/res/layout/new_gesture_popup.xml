@@ -28,12 +28,14 @@
             android:id="@+id/new_gesture_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:text="@string/cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/new_gesture_confirm"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/new_gesture_list" />
 
         <Button
@@ -41,8 +43,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:text="@string/confirm"
             app:layout_constraintBottom_toBottomOf="@+id/new_gesture_cancel"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/new_gesture_cancel"
             app:layout_constraintTop_toTopOf="@+id/new_gesture_cancel"
             app:layout_constraintVertical_bias="1.0" />

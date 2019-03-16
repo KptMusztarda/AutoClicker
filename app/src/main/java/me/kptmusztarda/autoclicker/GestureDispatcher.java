@@ -26,9 +26,6 @@ public class GestureDispatcher {
 
         new Thread(() -> {
 
-            int duration = 10;
-            int delay = 20;
-
             List<Dispatchable> gestures = profile.getGestures();
 
             while(active) {
@@ -36,14 +33,16 @@ public class GestureDispatcher {
 
                     if (!active) break;
 
-                    dispatch(gestures.get(i).getGestureDescription());
-                    //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
-
                     try {
-                        TimeUnit.MILLISECONDS.sleep(delay + duration);
+                        TimeUnit.MILLISECONDS.sleep(gestures.get(i).getDelay() + gestures.get(i).getTime());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+
+                    dispatch(gestures.get(i).getGestureDescription());
+                    //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
+
+
                 }
 //                    try {
 //                        TimeUnit.MILLISECONDS.sleep(delay);
@@ -51,6 +50,7 @@ public class GestureDispatcher {
 //                        e.printStackTrace();
 //                    }
             }
+
             Logger.log(TAG, "Loop thread ended");
         }).start();
 

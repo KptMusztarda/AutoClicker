@@ -1,4 +1,6 @@
-package me.kptmusztarda.autoclicker;
+package me.kptmusztarda.autoclicker.views;
+
+import me.kptmusztarda.autoclicker.SettingsLayout;
 
 public class ViewsManager {
 
@@ -18,7 +20,7 @@ public class ViewsManager {
     public BackgroundView getBackgroundView() {
         return backgroundView;
     }
-    void setBackgroundView(BackgroundView backgroundView) {
+    public void setBackgroundView(BackgroundView backgroundView) {
         this.backgroundView = backgroundView;
     }
 

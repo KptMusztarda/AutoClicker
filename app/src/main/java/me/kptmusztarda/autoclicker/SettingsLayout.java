@@ -26,7 +26,7 @@ public class SettingsLayout extends LinearLayout {
         setBackground(getResources().getDrawable(R.drawable.settings_border, null));
     }
 
-    protected WindowManager.LayoutParams getParams()  {
+    public WindowManager.LayoutParams getParams()  {
         int type;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -64,11 +64,13 @@ public class SettingsLayout extends LinearLayout {
             findViewById(R.id.removeButton).setVisibility(VISIBLE);
             for(ImageButton button : gestureEditButtons)
                 button.setVisibility(VISIBLE);
+            findViewById(R.id.propertiesButton).setVisibility(VISIBLE);
         } else {
             findViewById(R.id.addButton).setVisibility(GONE);
             findViewById(R.id.removeButton).setVisibility(GONE);
             for(ImageButton button : gestureEditButtons)
                 button.setVisibility(GONE);
+            findViewById(R.id.propertiesButton).setVisibility(GONE);
         }
         inEditMode = enabled;
     }

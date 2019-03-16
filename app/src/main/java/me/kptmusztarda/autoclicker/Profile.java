@@ -2,12 +2,14 @@ package me.kptmusztarda.autoclicker;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import me.kptmusztarda.autoclicker.gestures.Gestures;
+import me.kptmusztarda.autoclicker.views.ViewsManager;
 import me.kptmusztarda.handylib.Logger;
 import me.kptmusztarda.autoclicker.gestures.Dispatchable;
 import me.kptmusztarda.autoclicker.gestures.RandomCircle;
@@ -29,13 +31,13 @@ public class Profile {
         windowManager = new MyWindowManager(context);
     }
 
-    void addGesture(int type, int x, int y, int r, boolean show) {
+    void addGesture(int type, int x, int y, boolean show) {
 
         Dispatchable gesture = null;
 
         switch (Gestures.values()[type]) {
             case RANDOM_CIRCLE:
-                gesture = new RandomCircle(context, gestures.size(), x, y, 0) {
+                gesture = new RandomCircle(context, gestures.size(), x, y) {
                     @Override
                     public void setActive(boolean active) {
                         super.setActive(active);
@@ -116,10 +118,15 @@ public class Profile {
     }
 
     Dispatchable getSelectedGesture() {
-        return gestures.get(selectedGesture);
+        try {
+            return gestures.get(selectedGesture);
+        } catch (IndexOutOfBoundsException e) {
+            Toast.makeText(context, "Select gesture first", Toast.LENGTH_SHORT).show();
+        }
+        return null;
     }
 
-    List<Dispatchable> getGestures() {
+    public List<Dispatchable> getGestures() {
         return gestures;
     }
 

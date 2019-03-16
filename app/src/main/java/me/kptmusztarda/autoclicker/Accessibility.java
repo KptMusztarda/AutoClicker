@@ -10,27 +10,24 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import java.util.Objects;
 
 import me.kptmusztarda.autoclicker.gestures.Dispatchable;
-import me.kptmusztarda.autoclicker.gestures.Gesture;
 import me.kptmusztarda.autoclicker.gestures.Gestures;
-import me.kptmusztarda.autoclicker.gestures.RandomCircle;
+import me.kptmusztarda.autoclicker.popups.GesturePropertiesPopup;
+import me.kptmusztarda.autoclicker.popups.NewGesturePopup;
+import me.kptmusztarda.autoclicker.views.BackgroundView;
+import me.kptmusztarda.autoclicker.views.DimView;
+import me.kptmusztarda.autoclicker.views.ViewsManager;
 import me.kptmusztarda.handylib.Logger;
 
 public class Accessibility extends AccessibilityService {
@@ -45,7 +42,7 @@ public class Accessibility extends AccessibilityService {
     private SettingsLayout settingsLayout;
     private BackgroundView backgroundView;
     private DimView dimView;
-    private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, increaseRadiusButton, decreaseRadiusButton;
+    private ImageButton mainButton, editButton, addButton, removeButton, dimButton, closeButton, propertiesButton;
     private View divider;
 
     private ViewsManager viewsManager;
@@ -211,47 +208,14 @@ public class Accessibility extends AccessibilityService {
         addButton.setOnClickListener(v -> {
 
             NewGesturePopup popup = new NewGesturePopup(this);
-            windowManager.addView(popup, popup.getParams());
-
-            Spinner spinner = popup.findViewById(R.id.new_gesture_list);
-            spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, Gestures.getNamesList()));
-
-            Button cancel = popup.findViewById(R.id.new_gesture_cancel);
-            final boolean cancelDown[] = {false};
-            cancel.setOnTouchListener((v12, event) -> {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        cancelDown[0] = true;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if (cancelDown[0]) windowManager.removeViewImmediate(popup);
-                        cancelDown[0] = false;
-                        break;
-                }
-                return false;
-            });
+            popup.show();
 
             Button confirm = popup.findViewById(R.id.new_gesture_confirm);
-            final boolean cancelUp[] = {false};
-            confirm.setOnTouchListener((v12, event) -> {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        cancelUp[0] = true;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        if (cancelUp[0]) {
-
-                            int type = (int) spinner.getSelectedItemId();
-
-                            int coords[] = new int[2];
-                            v.getLocationOnScreen(coords);
-                            profile.addGesture(type, coords[0] + v.getWidth() + 100, coords[1], 0, true);
-
-                        }
-                        cancelUp[0] = false;
-                        break;
-                }
-                return false;
+            confirm.setOnClickListener(view -> {
+                int type = (int) popup.getSelectedId();
+                int coords[] = new int[2];
+                v.getLocationOnScreen(coords);
+                profile.addGesture(type, coords[0] + v.getWidth() + 100, coords[1], true);
             });
         });
         addButton.setVisibility(View.GONE);
@@ -282,6 +246,14 @@ public class Accessibility extends AccessibilityService {
             }
             return false;
         });
+
+        propertiesButton = settingsLayout.findViewById(R.id.propertiesButton);
+        propertiesButton.setOnClickListener((v -> {
+            if(profile.getSelectedGesture() != null) {
+                GesturePropertiesPopup popup = new GesturePropertiesPopup(this, profile.getSelectedGesture());
+                popup.show();
+            }
+        }));
     }
 
     private void loadProfile(int profileID) {

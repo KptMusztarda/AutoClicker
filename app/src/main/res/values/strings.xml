@@ -6,4 +6,8 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="new_profile_name">New profile name</string>
+    <string name="gesture_properties">Gesture properties</string>
+    <string name="apply">Apply</string>
+    <string name="properties_delay">Delay before dispatching</string>
+    <string name="properties_time">Dispatch time</string>
 </resources>

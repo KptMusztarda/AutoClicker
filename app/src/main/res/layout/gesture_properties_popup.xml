@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_popup_background">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/color_popup_layout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/gesture_properties_cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/cancel"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/gesture_properties_apply_button"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/gesture_properties_time_edittext" />
+
+        <TextView
+            android:id="@+id/textView6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/gesture_properties"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/gesture_properties_apply_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/apply"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/gesture_properties_cancel_button"
+            app:layout_constraintTop_toTopOf="@+id/gesture_properties_cancel_button" />
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/properties_delay"
+            app:layout_constraintBottom_toBottomOf="@+id/gesture_properties_delay_edittext"
+            app:layout_constraintEnd_toStartOf="@+id/gesture_properties_delay_edittext"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/gesture_properties_delay_edittext" />
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/properties_time"
+            app:layout_constraintBottom_toBottomOf="@+id/gesture_properties_time_edittext"
+            app:layout_constraintEnd_toStartOf="@+id/gesture_properties_time_edittext"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/gesture_properties_time_edittext" />
+
+        <EditText
+            android:id="@+id/gesture_properties_delay_edittext"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:ems="10"
+            android:inputType="number"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView6" />
+
+        <EditText
+            android:id="@+id/gesture_properties_time_edittext"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ems="10"
+            android:inputType="number"
+            app:layout_constraintStart_toStartOf="@+id/gesture_properties_delay_edittext"
+            app:layout_constraintTop_toBottomOf="@+id/gesture_properties_delay_edittext" />
+    </android.support.constraint.ConstraintLayout>
+</android.support.constraint.ConstraintLayout>

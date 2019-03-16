@@ -1,4 +1,4 @@
-package me.kptmusztarda.autoclicker;
+package me.kptmusztarda.autoclicker.views;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -10,6 +10,8 @@ import android.view.WindowManager;
 
 import java.util.List;
 
+import me.kptmusztarda.autoclicker.Profile;
+import me.kptmusztarda.autoclicker.R;
 import me.kptmusztarda.autoclicker.gestures.Dispatchable;
 import me.kptmusztarda.handylib.Logger;
 
@@ -46,7 +48,7 @@ public class BackgroundView extends View {
 
     }
 
-    protected WindowManager.LayoutParams getParams()  {
+    public WindowManager.LayoutParams getParams()  {
         return params;
     }
 
@@ -62,7 +64,7 @@ public class BackgroundView extends View {
 
     }
 
-    void setProfile(Profile profile) {
+    public void setProfile(Profile profile) {
         this.profile = profile;
     }
 }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="45dp"
     android:layout_height="wrap_content">
 
@@ -7,7 +9,9 @@
         android:id="@+id/settings_linear"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="26dp">
 
         <ImageButton
             android:id="@+id/mainButton"
@@ -103,6 +107,18 @@
             android:layout_marginEnd="4dp"
             android:background="?android:attr/listDivider"
             android:visibility="visible" />
+
+        <ImageButton
+            android:id="@+id/propertiesButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:background="@color/color_transparent"
+            android:scaleType="fitCenter"
+            android:src="@android:drawable/stat_notify_missed_call" />
 
     </LinearLayout>
 
