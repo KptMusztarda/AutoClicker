@@ -47,6 +47,7 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     WindowManager.LayoutParams params;
     int delay = 20;
     int time = 10;
+    int dispatchEvery = 1;
 
     private MyWindowManager windowManager;
     private ViewsManager viewsManager = ViewsManager.getInstance();
@@ -127,6 +128,12 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     protected int[] getViewCoordinates() {
         return new int[]{params.x, params.y};
     }
+    protected int[] getPointCoordinates() {
+        int coords[] = getViewCoordinates();
+        coords[0] += viewSize/2;
+        coords[1] += viewSize/2 + ViewsManager.getInstance().getStatusBarHeight();
+        return coords;
+    }
 
     public int getDelay() {
         return delay;
@@ -140,6 +147,13 @@ public class Gesture extends android.support.v7.widget.AppCompatTextView {
     }
     public void setTime(int time) {
         this.time = time;
+    }
+
+    public int getDispatchEvery() {
+        return dispatchEvery;
+    }
+    public void setDispatchEvery(int dispatchEvery) {
+        this.dispatchEvery = dispatchEvery;
     }
 
     public void show() {

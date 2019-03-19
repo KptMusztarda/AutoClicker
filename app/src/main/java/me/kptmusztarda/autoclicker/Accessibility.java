@@ -10,19 +10,19 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.telephony.TelephonyManager;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.Spinner;
+import android.widget.PopupWindow;
 
 import java.util.Objects;
 
 import me.kptmusztarda.autoclicker.gestures.Dispatchable;
-import me.kptmusztarda.autoclicker.gestures.Gestures;
 import me.kptmusztarda.autoclicker.popups.GesturePropertiesPopup;
 import me.kptmusztarda.autoclicker.popups.NewGesturePopup;
 import me.kptmusztarda.autoclicker.views.BackgroundView;
@@ -139,14 +139,15 @@ public class Accessibility extends AccessibilityService {
         registerReceiver(receiver, filter);
         Logger.log(TAG, "BroadcastReceiver registered");
 
+
         viewsManager = ViewsManager.getInstance();
         setupViews();
         profileManager = new ProfileManager(this);
 
         gestureDispatcher = new GestureDispatcher() {
             @Override
-            void dispatch(GestureDescription gesture) {
-                dispatchGesture(gesture, null, null);
+            boolean dispatch(GestureDescription gesture) {
+                return dispatchGesture(gesture, null, null);
             }
 
             @Override
@@ -247,11 +248,14 @@ public class Accessibility extends AccessibilityService {
             return false;
         });
 
-        propertiesButton = settingsLayout.findViewById(R.id.propertiesButton);
+        propertiesButton = settingsLayout.findViewById(R.id.properties_button);
         propertiesButton.setOnClickListener((v -> {
             if(profile.getSelectedGesture() != null) {
-                GesturePropertiesPopup popup = new GesturePropertiesPopup(this, profile.getSelectedGesture());
-                popup.show();
+                GesturePropertiesPopup pw = new GesturePropertiesPopup(this, backgroundView.getWidth(), backgroundView.getHeight(), profile.getSelectedGesture());
+                pw.setOnDismissListener(() -> showGestures(true));
+                showGestures(false);
+                pw.showAtLocation(backgroundView, Gravity.CENTER, 0, 0);
+
             }
         }));
     }
@@ -299,22 +303,26 @@ public class Accessibility extends AccessibilityService {
 
         if(enabled) {
             windowManager.addView(backgroundView, backgroundView.getParams());
-            for(Dispatchable view : profile.getGestures())
-                view.show();
+            showGestures(true);
             settingsLayout.setEditMode(enabled);
         } else {
-
             profileManager.saveProfile(profileID);
-
-            for(int i = profile.getGestures().size()-1; i>=0; i--) {
-                profile.getGestures().get(i).hide();
-            }
+            showGestures(false);
             windowManager.removeViewImmediate(backgroundView);
             settingsLayout.setEditMode(enabled);
         }
         editMode = enabled;
 
         windowManager.updateViewLayout(settingsLayout, settingsLayout.getParams());
+    }
+
+    private void showGestures(boolean b) {
+        if(b)
+            for(Dispatchable view : profile.getGestures())
+                view.show();
+        else
+            for(int i = profile.getGestures().size()-1; i>=0; i--)
+                profile.getGestures().get(i).hide();
     }
 
 

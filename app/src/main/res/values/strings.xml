@@ -10,4 +10,5 @@
     <string name="apply">Apply</string>
     <string name="properties_delay">Delay before dispatching</string>
     <string name="properties_time">Dispatch time</string>
+    <string name="properties_dispatch_every">Dispatch every x cycles</string>
 </resources>

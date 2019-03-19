@@ -2,6 +2,7 @@ package me.kptmusztarda.autoclicker;
 
 import android.accessibilityservice.GestureDescription;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -28,20 +29,31 @@ public class GestureDispatcher {
 
             List<Dispatchable> gestures = profile.getGestures();
 
+            long startTime = System.currentTimeMillis();
+            int cyclesToDispatch[] = new int[gestures.size()];
+            Arrays.fill(cyclesToDispatch, 0);
+
             while(active) {
                 for (int i = 0; i<gestures.size(); i++) {
 
-                    if (!active) break;
 
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(gestures.get(i).getDelay() + gestures.get(i).getTime());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    if(cyclesToDispatch[i] == 0) {
 
-                    dispatch(gestures.get(i).getGestureDescription());
-                    //Logger.log(TAG, "Gesture dispatched " + dispatchGesture(gesture, null, null) + " " +  System.currentTimeMillis() + "ms");
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(gestures.get(i).getDelay() + gestures.get(i).getTime());
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
 
+                        if (!active) break;
+
+
+//                    dispatch(gestures.get(i).getGestureDescription());
+                        Logger.log(TAG, "Gesture " + i + " dispatched: " + Boolean.toString(dispatch(gestures.get(i).getGestureDescription())) + " " + (System.currentTimeMillis() - startTime) + "ms");
+
+                        cyclesToDispatch[i] = gestures.get(i).getDispatchEvery()-1;
+
+                    } else cyclesToDispatch[i]--;
 
                 }
 //                    try {
@@ -70,5 +82,7 @@ public class GestureDispatcher {
         this.profile = profile;
     }
 
-    void dispatch(GestureDescription gesture) {}
+    boolean dispatch(GestureDescription gesture) {
+        return false;
+    }
 }

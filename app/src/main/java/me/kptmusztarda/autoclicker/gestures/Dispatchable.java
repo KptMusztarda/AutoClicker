@@ -15,6 +15,8 @@ public interface Dispatchable {
     int getDelay();
     void setTime(int time);
     int getTime();
+    void setDispatchEvery(int dispatchEvery);
+    int getDispatchEvery();
     void setActive(boolean b);
     void drawOnBackground(Canvas c, Paint paint);
     ImageButton[] getGestureEditButtons();

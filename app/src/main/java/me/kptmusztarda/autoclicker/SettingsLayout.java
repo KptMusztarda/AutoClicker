@@ -64,13 +64,13 @@ public class SettingsLayout extends LinearLayout {
             findViewById(R.id.removeButton).setVisibility(VISIBLE);
             for(ImageButton button : gestureEditButtons)
                 button.setVisibility(VISIBLE);
-            findViewById(R.id.propertiesButton).setVisibility(VISIBLE);
+            findViewById(R.id.properties_button).setVisibility(VISIBLE);
         } else {
             findViewById(R.id.addButton).setVisibility(GONE);
             findViewById(R.id.removeButton).setVisibility(GONE);
             for(ImageButton button : gestureEditButtons)
                 button.setVisibility(GONE);
-            findViewById(R.id.propertiesButton).setVisibility(GONE);
+            findViewById(R.id.properties_button).setVisibility(GONE);
         }
         inEditMode = enabled;
     }

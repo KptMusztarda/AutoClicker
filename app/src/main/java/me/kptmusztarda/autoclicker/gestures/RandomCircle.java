@@ -21,7 +21,7 @@ public class RandomCircle extends Gesture implements Dispatchable {
 
     public RandomCircle(Context context, int index, int x, int y) {
         super(context, index, TAG, DRAWABLE_ID, 0, 0);
-        init(x, y, 20, 10, 20);
+        init(x, y, 20, 10, 1, 20);
     }
 
     public RandomCircle(Context context, int index, String str) {
@@ -30,34 +30,28 @@ public class RandomCircle extends Gesture implements Dispatchable {
         String s[] = str.split(",");
         int x = Integer.parseInt(s[1]);
         int y = Integer.parseInt(s[2]);
-        int d = Integer.parseInt(s[3]);
-        int t = Integer.parseInt(s[4]);
-        int r = Integer.parseInt(s[5]);
+        int delay = Integer.parseInt(s[3]);
+        int time = Integer.parseInt(s[4]);
+        int dispatchEvery = Integer.parseInt(s[5]);
+        int radius = Integer.parseInt(s[6]);
 
-        init(x, y, d, t, r);
+        init(x, y, delay, time, dispatchEvery, radius);
     }
 
-    private void init(int x, int y, int d, int t, int r) {
+    private void init(int x, int y, int delay, int time, int dispatchEvery, int radius) {
         setViewCoordinates(x, y);
-        setDelay(d);
-        setTime(t);
-        setRadius(r);
+        setDelay(delay);
+        setTime(time);
+        setDispatchEvery(dispatchEvery);
+        setRadius(radius);
         setTextAlignment(TEXT_ALIGNMENT_CENTER);
         setTextColor(getResources().getColor(R.color.color_index, null));
     }
 
     @Override
     public String toString() {
-        return TYPE + "," + params.x + "," + params.y + "," + delay + "," + time + "," + radius;
+        return TYPE + "," + params.x + "," + params.y + "," + delay + "," + time + "," + dispatchEvery + "," + radius;
     }
-
-    protected int[] getPointCoordinates() {
-        int coords[] = getViewCoordinates();
-        coords[0] += viewSize/2;
-        coords[1] += viewSize/2 + ViewsManager.getInstance().getStatusBarHeight();
-        return coords;
-    }
-
 
     public void setRadius(int r) {
         if(r > 0) {
